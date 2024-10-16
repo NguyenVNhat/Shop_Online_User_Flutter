@@ -26,6 +26,7 @@ class AppRoute {
   static String ORDER_CART_PAGE = "/order-cart";
   static String NOTIFICATION_PAGE = "/notification";
   static String ORDER_PRODUCT_PAGE = "/product-order";
+  static String TRANSFER_POINT_PAGE = "/transfer-point";
 
   static String order_combo(int comboid,int drinkid) =>
       '$ORDER_COMBO_PAGE?comboid=$comboid&drinkid=$drinkid';
