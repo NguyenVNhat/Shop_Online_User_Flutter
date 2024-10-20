@@ -1,14 +1,13 @@
-import 'package:flutter_user_github/data/api/AppConstant.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/data/repository/Product_repo.dart';
 import 'package:flutter_user_github/models/Dto/AddCartDto.dart';
-import 'package:flutter_user_github/models/Dto/CartDto.dart';
 import 'package:flutter_user_github/models/Dto/CommentDto.dart';
 import 'package:flutter_user_github/models/Dto/OrderProductDto.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/ProductModel.dart';
 import 'package:flutter_user_github/models/Model/RateModel.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
@@ -60,7 +59,18 @@ class ProductController extends GetxController {
         storeId: idstore);
     Response response = await productRepo.addtocart(cart);
     if (response.statusCode == 200) {
-      Get.snackbar("Thông báo", "Thêm vào giỏ hàng thành công");
+      Get.snackbar(
+        "Thông báo",
+        "Thêm vào giỏ hàng thành công",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+      );
       Get.find<UserController>().addannouce(
           "Thông báo giỏ hàng", "Bạn vừa thêm một sản phẩm vào giỏ hàng !");
     } else {
@@ -100,7 +110,6 @@ class ProductController extends GetxController {
   bool get isLoadingStoreCategory => _isLoadingStoreCategory;
   Future<void> getProductByStoreCategoryId(int storeid, int categoryid) async {
     _isLoadingStoreCategory = true;
-    print(_isLoadingStoreCategory);
     Response response =
         await productRepo.getbystoreandcategoryid(storeid, categoryid);
     if (response.statusCode == 200) {
@@ -114,8 +123,23 @@ class ProductController extends GetxController {
           response.statusCode.toString());
     }
     _isLoadingStoreCategory = false;
-    print(_isLoadingStoreCategory);
     update();
+  }
+
+  Future<List<Productitem>> getProductByStoreCategoryIdV2(
+    int storeid, int categoryid) async {
+    List<Productitem> list = [];
+    Response response =
+        await productRepo.getbystoreandcategoryid(storeid, categoryid);
+    if (response.statusCode == 200) {
+      var data = response.body;
+
+      list.addAll(Productmodel.fromJson(data).get_listproduct ?? []);
+    } else {
+      print("Lỗi không lấy được danh sách sản phẩm theo danh mục" +
+          response.statusCode.toString());
+    }
+    return list;
   }
 
   String textSearch = "";
@@ -129,50 +153,22 @@ class ProductController extends GetxController {
   // Tìm kiếm sản phẩm theo tên
   List<Productitem> _productListSearch = [];
   List<Productitem> get productListSearch => _productListSearch;
-
-  // Future<void> search() async {
-  //   try {
-  //     if (textSearch == "") {
-  //       _productListSearch = _productList;
-  //     } else {
-  //       Response response = await productRepo.getbyname(this.textSearch);
-  //       print(textSearch);
-  //       if (response.statusCode == 200) {
-  //         var data = response.body;
-  //         _productListSearch = [];
-  //         _productListSearch
-  //             .addAll(Productmodel.fromJson(data).get_listproduct ?? []);
-
-  //       } else {
-  //         print("Lỗi không lấy được danh sách sản phẩm theo tên" +
-  //             response.statusCode.toString());
-  //         _productListSearch = [];
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print("Exception: $e");
-  //     _productListSearch = [];
-  //   } finally {
-  //     SchedulerBinding.instance.addPostFrameCallback((_) {
-  //       update();
-  //     });
-  //   }
-  // }
   void search() {
     try {
-    _productListSearch = []; 
+      _productListSearch = [];
 
-    if (textSearch.isEmpty) {
-      _productListSearch = _productList; 
-    } else {
-      for (Productitem item in _productList) {
-        if (item.productName!.toLowerCase().contains(textSearch.toLowerCase())) {
-          _productListSearch.add(item); 
+      if (textSearch.isEmpty) {
+        _productListSearch = _productList;
+      } else {
+        for (Productitem item in _productList) {
+          if (item.productName!
+              .toLowerCase()
+              .contains(textSearch.toLowerCase())) {
+            _productListSearch.add(item);
+          }
         }
       }
-    }
-    }
-    catch (e) {
+    } catch (e) {
       print("Exception: $e");
       _productListSearch = [];
     } finally {
@@ -182,20 +178,113 @@ class ProductController extends GetxController {
     }
   }
 
-  Future<void> searchByImage(String base64Image) async{
-      Response response = await productRepo.searchbyimage(base64Image);
-      if(response.statusCode == 200){
-        var data = response.body;
-          _productListSearch = [];
-          _productListSearch
-              .addAll(Productmodel.fromJson(data).get_listproduct ?? []);
-          update();
-          print("Món ăn" +_productListSearch[0].productName!);
-      }else{
-        print("Lỗi ${response.statusCode}");
-         _productListSearch = [];
-         update();
+  void swap(List<Productitem> arr, int i, int j) {
+    Productitem temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+
+  int partition(List<Productitem> arr, int low, int high, type) {
+    Productitem pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j <= high - 1; j++) {
+      if (type == 1) {
+        if (arr[j].price! > pivot.price!) {
+          i++;
+          swap(arr, i, j);
+        }
+      } else {
+        if (arr[j].price! < pivot.price!) {
+          i++;
+          swap(arr, i, j);
+        }
       }
+    }
+
+    swap(arr, i + 1, high);
+    return i + 1;
+  }
+
+  void quickSort(List<Productitem> arr, int low, int high, int type) {
+    if (low < high) {
+      int pi = partition(arr, low, high, type);
+      quickSort(arr, low, pi - 1, type);
+      quickSort(arr, pi + 1, high, type);
+    }
+  }
+
+  void sortDes(int type) {
+    try {
+      quickSort(_productListSearch, 0, _productListSearch.length - 1, type);
+    } catch (e) {
+      print("Exception: $e");
+      _productListSearch = [];
+    } finally {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        update();
+      });
+    }
+  }
+
+  void getallProductSearch() {
+    try {
+      _productListSearch = _productList;
+      textSearch = "";
+    } catch (e) {
+      print("Exception: $e");
+      _productListSearch = [];
+    } finally {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        update();
+      });
+    }
+  }
+
+  void filterProduct(String categoryName, int lowprice, int highprice) {
+    try {
+      _productListSearch = [];
+      for (Productitem item in productList) {
+        if (categoryName == "Tất cả") {
+          if (item.price!.toInt() > lowprice &&
+              item.price!.toInt() < highprice) {
+            _productListSearch.add(item);
+          }
+        } else {
+          if (item.category!.categoryName == categoryName &&
+              item.price!.toInt() > lowprice &&
+              item.price!.toInt() < highprice) {
+            _productListSearch.add(item);
+          }
+        }
+      }
+    } catch (e) {
+      print("Exception: $e");
+      _productListSearch = [];
+    } finally {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        update();
+      });
+    }
+  }
+
+  Future<void> searchByImage(String base64Image) async {
+    Response response = await productRepo.searchbyimage(base64Image);
+    if (response.statusCode == 200) {
+      var data = response.body;
+      print(data);
+      _productListSearch = [];
+      for (Productitem item in _productList) {
+        if (item.productName!.toLowerCase().contains(data.toLowerCase())) {
+          _productListSearch.add(item);
+        }
+      }
+      update();
+    } else {
+      print("Lỗi ${response.statusCode}");
+      _productListSearch = [];
+      update();
+    }
   }
 
   // Lấy danh sách nước uống
@@ -212,7 +301,18 @@ class ProductController extends GetxController {
   Future<void> addcomment(Commentdto dto) async {
     Response response = await productRepo.addcomment(dto);
     if (response.statusCode == 200) {
-      Get.snackbar("Thông báp", "Phản hồi thành công");
+      Get.snackbar(
+        "Thông báo",
+        "Phản hồi thành công",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+      );
     } else {
       print("Phản hồi thất bại");
     }
@@ -245,7 +345,18 @@ class ProductController extends GetxController {
     Response response = await productRepo.order(dto);
     if (response.statusCode == 200) {
       if (dto.paymentMethod == "CASH") {
-        Get.snackbar("Thông báo", "Đặt đơn hàng thành công");
+        Get.snackbar(
+          "Thông báo",
+          "Đặt đơn hàng thành công",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white,
+          colorText: Colors.black,
+          icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+          borderRadius: 10,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+          isDismissible: true,
+        );
         Get.find<UserController>().addannouce(
             "Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !");
       } else {
@@ -256,6 +367,19 @@ class ProductController extends GetxController {
     }
     loadingOrder = false;
     update();
+  }
+
+  Future<List<Productitem>> getbystoreId(int storeid) async {
+    List<Productitem> result = [];
+    Response response = await productRepo.getbystoreId(storeid);
+    if (response.statusCode == 200) {
+      var data = response.body;
+      result.addAll(Productmodel.fromJson(data).get_listproduct ?? []);
+      return result;
+    } else {
+      print("Lỗi không lấy được sản phẩm");
+      return result;
+    }
   }
 }
 

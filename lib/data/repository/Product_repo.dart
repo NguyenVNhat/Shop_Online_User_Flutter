@@ -6,7 +6,6 @@ import 'package:flutter_user_github/models/Dto/AddCartDto.dart';
 import 'package:flutter_user_github/models/Dto/CommentDto.dart';
 import 'package:flutter_user_github/models/Dto/OrderProductDto.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 class ProductRepo {
   final ApiClient apiClient;
@@ -72,6 +71,9 @@ class ProductRepo {
   });
   return await apiClientAI.postDataPublic(Appconstant.SEARCH_BYIMAGE_URL, body);
  }
+ Future<Response> getbystoreId(int storeId) async{
+    return await apiClient.getData(Appconstant.PRODUCT_BYSTOREID_URL.replaceFirst("{id}", storeId.toString()));
+  }
 
 
 // Future<Response> searchByImage(String base64Image) async {

@@ -1,6 +1,3 @@
-
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_user_github/data/controller/Auth_controller.dart';
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
 import 'package:flutter_user_github/data/controller/Category_controller.dart';
@@ -10,11 +7,13 @@ import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/data/service/AnnounceCheckService.dart';
-import 'package:flutter_user_github/helper/dependencies.dart' as dep;
 import 'package:flutter_user_github/route/app_pages.dart';
 import 'package:flutter_user_github/route/app_route.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:flutter_user_github/helper/dependencies.dart' as dep;
+import 'package:geolocator/geolocator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,10 +1,7 @@
 import 'package:flutter_user_github/data/api/ApiClient.dart';
 import 'package:flutter_user_github/data/api/AppConstant.dart';
 import 'package:flutter_user_github/models/Dto/CartDto.dart';
-import 'package:flutter_user_github/models/Dto/UserDto.dart';
-import 'package:flutter_user_github/models/Dto/UserRegisterDto.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CartRepo {
   final ApiClient apiClient;

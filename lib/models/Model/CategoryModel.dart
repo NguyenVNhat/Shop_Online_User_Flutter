@@ -1,5 +1,3 @@
-
-
 import 'package:flutter_user_github/models/Model/Item/CategoryItem.dart';
 
 class Categorymodel {

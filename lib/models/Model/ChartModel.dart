@@ -1,5 +1,3 @@
-
-
 import 'package:flutter_user_github/models/Model/UserModel.dart';
 
 class Chartmodel {

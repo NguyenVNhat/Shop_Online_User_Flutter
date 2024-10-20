@@ -27,11 +27,21 @@ class AppRoute {
   static String NOTIFICATION_PAGE = "/notification";
   static String ORDER_PRODUCT_PAGE = "/product-order";
   static String TRANSFER_POINT_PAGE = "/transfer-point";
+  static String USER_CHAT_DETAIL_PAGE = "/chat-detail";
+  static String SEARCH_CHAT_PAGE = "/search-chat";
+  static String STORE_CHAT_PAGE = "/store-chat";
+  static String STORE_CHAT_DETAIL_PAGE = "/store-chat-detail";
 
-  static String order_combo(int comboid,int drinkid) =>
+  static String user_chat_detail(int idreceiver) =>
+      '$USER_CHAT_DETAIL_PAGE?idreceiver=$idreceiver';
+
+  static String store_chat_detail(int storeId) =>
+      '$STORE_CHAT_DETAIL_PAGE?storeId=$storeId';
+
+  static String order_combo(int comboid, int drinkid) =>
       '$ORDER_COMBO_PAGE?comboid=$comboid&drinkid=$drinkid';
 
-  static String order_product(int product,String size,int quantity) =>
+  static String order_product(int product, String size, int quantity) =>
       '$ORDER_PRODUCT_PAGE?product=$product&size=$size&quantity=$quantity';
 
   static String get_store_detail(int storeid) =>

@@ -15,7 +15,7 @@ class Storecontroller extends GetxController {
   List<Storesitem> get storeList => _storeList;
 
   Future<void> getall() async {
-    _isLoading = false;
+    _isLoading = true;
     Response response = await storeRepo.getall();
 
     if (response.statusCode == 200) {
@@ -27,7 +27,7 @@ class Storecontroller extends GetxController {
       print("Lỗi không lấy được danh sách cửa hàng : " +
           response.statusCode.toString());
     }
-    _isLoading = true;
+    _isLoading = false;
     update();
   }
 

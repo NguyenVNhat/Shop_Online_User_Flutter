@@ -18,4 +18,9 @@ class ChartRepo {
     Chartdto chartdto = Chartdto(sender: idsender, receiver: idreceiver, message: "", imageBase64: image, isRead: true);
     return await apiClient.postData(Appconstant.SAVE_CHART_IMAGE,chartdto.toJson());
   }
+    Future<Response> searchUser(String username) async {
+      print(username);
+    
+    return await apiClient.getData(Appconstant.CHART_SEARCH_URL.replaceFirst("{keyname}", username));
+  }
 }

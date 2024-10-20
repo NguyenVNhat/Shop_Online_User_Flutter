@@ -26,6 +26,9 @@ class UserRepo {
   Future<Response> addannouce(Annoucedto dto) async{
     return await apiClient.postData(Appconstant.ANNOUNCE_ADD_URL,dto.toJson());
   }
+   Future<Response> getbyid(int id) async{
+    return await apiClient.getData(Appconstant.USER_GET_ID_URL.replaceFirst("{id}", id.toString()));
+  }
 
 
   

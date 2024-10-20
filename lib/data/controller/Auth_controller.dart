@@ -1,5 +1,6 @@
 import 'package:flutter_user_github/data/api/ApiClient.dart';
 import 'package:flutter_user_github/data/repository/Auth_repo.dart';
+import 'package:flutter_user_github/data/service/AnnounceCheckService.dart';
 import 'package:flutter_user_github/models/Dto/UserDto.dart';
 import 'package:flutter_user_github/models/Dto/UserRegisterDto.dart';
 import 'package:flutter_user_github/route/app_route.dart';
@@ -96,6 +97,8 @@ class AuthController extends GetxController implements GetxService {
 
     if (response.statusCode == 200) {
       IsLogin.value = false;
+      final announceService = Get.find<Announcecheckservice>();
+    announceService.onClose();
       Get.toNamed(AppRoute.LOGIN_PAGE);
       update();
 

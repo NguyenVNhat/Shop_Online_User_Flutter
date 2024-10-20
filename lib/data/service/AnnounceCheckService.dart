@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter_user_github/data/controller/Auth_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Model/AnnounceModel.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,7 @@ class Announcecheckservice extends GetxService {
   Timer? _timer;
   int? previousLength = -1;
   late UserController userController = Get.find<UserController>();
+  late AuthController authController = Get.find<AuthController>();
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -15,16 +17,17 @@ class Announcecheckservice extends GetxService {
   Future<Announcecheckservice> initService() async {
     userController = Get.find<UserController>();
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer timer) async {
-      await userController.getannounce();
-      if (!userController.getloadingannouce) {
-       int currentLength = userController.getlistannouce.length;
+      if (authController.IsLogin.value) {
+        await userController.getannounce();
+        if (!userController.getloadingannouce) {
+          int currentLength = userController.getlistannouce.length;
 
-     
-        if (previousLength! < currentLength && previousLength != -1) {
-          AnnounceData data = userController.getlistannouce.last;
-          await showNotification(data.title!, data.content!);
+          if (previousLength! < currentLength && previousLength != -1) {
+            AnnounceData data = userController.getlistannouce.last;
+            await showNotification(data.title!, data.content!);
+          }
+          previousLength = currentLength;
         }
-        previousLength = currentLength;
       }
     });
 

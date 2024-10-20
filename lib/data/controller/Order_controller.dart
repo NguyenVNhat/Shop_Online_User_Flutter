@@ -72,14 +72,14 @@ class OrderController extends GetxController {
       print("Lỗi feedback");
     }
   }
-  Future<void> cancelorder(String ordercode)async{
+  Future<void> cancelorder(String ordercode,String status)async{
     Response response = await orderRepo.cancelorder(ordercode);
     if(response.statusCode != 200){
       print("Lỗi hủy đơn");
     }
     else{
       Get.find<UserController>().addannouce("Thông báo đơn hàng", "Bạn vừa đặt hủy thành công một đơn hàng !"); 
-     
+     await getorderWithStatus(status);
       
     }
   }

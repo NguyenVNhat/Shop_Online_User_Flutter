@@ -1,6 +1,8 @@
 import 'package:flutter_user_github/data/repository/Chart_repo.dart';
 import 'package:flutter_user_github/models/Model/ChartModel.dart';
 import 'package:flutter_user_github/models/Model/Messagemodel.dart';
+import 'package:flutter_user_github/models/Model/UserModel.dart';
+import 'package:flutter_user_github/models/Model/Userchatmodel.dart';
 import 'package:get/get.dart';
 
 class ChartController extends GetxController implements GetxService {
@@ -24,6 +26,10 @@ class ChartController extends GetxController implements GetxService {
   List<UserChart> listUser = [];
   List<UserChart> get getlistuser => listUser;
 
+   // * danh sách tìm kiếm người nhắn tin 
+  List<User> listUserSearch = [];
+  List<User> get getlistuserSearch => listUserSearch;
+
   // * danh sách tin nhắn với người dùng
   List<Usermessage> listUsermesage = [];
   List<Usermessage> get getlistusermesage => listUsermesage;
@@ -46,12 +52,43 @@ class ChartController extends GetxController implements GetxService {
   // **************************************************************************** Khai báo hàm
 
   Future<void> getall() async{
+    _isLoading = true;
       Response response = await chartRepo.getChart();
       if(response.statusCode == 200){
           var data = response.body;
            listUser = [];
-          listUser.addAll(Chartmodel.fromJson(data).getlistuser ?? []);
+          listUser = Chartmodel.fromJson(data).getlistuser ?? [];
+          print("lấy danh sách người dùng thành công");
       }
+      else{
+        print("lấy danh sách người dùng không thành công");
+      }
+      _isLoading = false;
+      update();
+  }
+  UserChart? getReceiver(int idreceiver){
+    for(UserChart item in listUser){
+      if(item.id == idreceiver){
+        return item;
+      }
+    }
+    return null;
+  }
+  bool? isLoadingSearch ;
+  bool get igetLoadingSearch => isLoading;
+  Future<void> searchUser(String username) async{
+    listUserSearch = [];
+    isLoadingSearch = true;
+      Response response = await chartRepo.searchUser(username);
+      if(response.statusCode == 200){
+        var data = response.body;
+          listUserSearch.addAll(Userchatmodel.fromJson(data).getlistuser ?? []);
+          print("Lấy thành công danh sahcs người dùng");
+      }
+      else{
+        print("Lỗi tìm kiếm người dùng");
+      }
+      isLoadingSearch = false;
       update();
   }
 

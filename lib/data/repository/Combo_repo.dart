@@ -17,6 +17,11 @@ class ComboRepo {
         Appconstant.COMBO_BY_COMBOID_URL.replaceFirst("{id}", id.toString());
     return await apiClient.getData(url);
   }
+  Future<Response> getbystoreid(int storeid) async {
+    String url =
+        Appconstant.COMBO_BY_STOREID_URL.replaceFirst("{storeid}", storeid.toString());
+    return await apiClient.getData(url);
+  }
   Future<Response> order(Ordercombodto dto) async {
     return await apiClient.postData(Appconstant.ORDER_COMBO_2_URL,dto.toJson());
   }

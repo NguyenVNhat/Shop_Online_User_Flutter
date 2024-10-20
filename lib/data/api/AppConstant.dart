@@ -6,8 +6,6 @@ class Appconstant {
   static const String BASE_AI_URL = "http://192.168.1.39:5000";
   static const String SEARCH_BYIMAGE_URL = "/predict";
 
-
-
   static const String LOGIN_URL= "/api/v1/auth/login";
   static const String LOGOUT_URL= "/api/v1/auth/logout";
   static const String REGISTER_URL= "/api/v1/auth/register-user";
@@ -17,6 +15,7 @@ class Appconstant {
 
   static const String COMBO_URL = "/api/v1/public/combo/all";
   static const String COMBO_BY_COMBOID_URL = "/api/v1/public/combo/{id}";
+  static const String COMBO_BY_STOREID_URL = "/api/v1/public/combo/store/{storeid}";
   
 
   static const String STORE_URL = "/api/v1/public/stores/all";
@@ -28,6 +27,7 @@ class Appconstant {
   static const String PRODUCT_URL = "/api/v1/public/products/all";
   static const String PRODUCT_GET_COMMENT_URL = "/api/v1/public/rate/product/{productid}";
   static const String PRODUCT_BYID_URL = "/api/v1/public/products/{id}";
+  static const String PRODUCT_BYSTOREID_URL = "/api/v1/public/products/store/{id}";
   static const String PRODUCT_ADD_COMMENT_URL = "/api/v1/user/product/rate";
   static const String PRODUCT_LIST_BYCATEGORYID_URL = "/api/v1/public/products/category/{id}";
   static const String PRODUCT_LIST_BYCATEGORYID_STOREID_URL = "/api/v1/public/products/{storeid}/{categoryid}";
@@ -49,7 +49,8 @@ class Appconstant {
   static const String ANNOUNCE_ADD_URL = "/api/v1/user/announce/add";
   
   static const String USER_PROFILE_URL = "/api/v1/user/auth/profile";
-  static const String USER_UPDATE_PROFILE_URL = "/api/v1/user/auth/profiles/update";
+  static const String USER_GET_ID_URL = "/api/v1/public/user/{id}";
+  static const String USER_UPDATE_PROFILE_URL = "/api/v1/user/auth/profiles/updates";
   static const String PRODUCT_LIST_BYNAME_URL = "/api/v1/public/products/search?name={name}";
 
   static const String SIZE_URL = "/api/v1/public/sizes/all";
@@ -57,6 +58,7 @@ class Appconstant {
 
   static const String SAVE_CHART_IMAGE = "/api/chats/saveImages";
   static const String CHART_URL = "/api/chats/users-chat";
+  static const String CHART_SEARCH_URL = "/api/v1/public/user/search/{keyname}";
   static const String GETLISTCHART_URL = "/api/chats/receiver/{receiverid}";
 
   static const String TOKEN = "DBtoken";

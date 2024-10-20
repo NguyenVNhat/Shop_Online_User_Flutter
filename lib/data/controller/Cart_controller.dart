@@ -6,6 +6,7 @@ import 'package:flutter_user_github/models/Model/CartModel.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/NewCartModel.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class CartController extends GetxController implements GetxService {
@@ -114,7 +115,19 @@ class CartController extends GetxController implements GetxService {
           paymentMethod: paymentMethod));
       if (response.statusCode == 200) {
         if (paymentMethod == "CASH") {
-          Get.snackbar("Thông báo", "Đặt đơn hàng thành công");
+           Get.snackbar(
+            "Thông báo",
+            "Đặt đơn hàng thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
           Get.find<UserController>().addannouce("Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !"); 
           await getListCartV2();
         } else {
@@ -127,7 +140,19 @@ class CartController extends GetxController implements GetxService {
       }
     }
      else {
-      Get.snackbar("Thông báo", "Vui lòng chọn sản phẩm đặt đơn");
+       Get.snackbar(
+        "Thông báo",
+        "Vui lòng chọn sản phẩm đặt đơn",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.warning, color: Colors.red),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+        
+      );
     }
     ordering = false;
     update();

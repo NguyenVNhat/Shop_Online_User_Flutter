@@ -4,6 +4,7 @@ import 'package:flutter_user_github/models/Dto/OrderComboDto.dart';
 import 'package:flutter_user_github/models/Model/ComboModel.dart';
 import 'package:flutter_user_github/models/Model/Item/ComboItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ComboController extends GetxController {
@@ -38,7 +39,19 @@ class ComboController extends GetxController {
     Response response = await comboRepo.order(dto);
     if(response.statusCode == 200){
       if (dto.paymentMethod == "CASH") {
-          Get.snackbar("Thông báo", "Đặt đơn hàng thành công");
+           Get.snackbar(
+            "Thông báo",
+            "Đặt đơn hàng thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
           Get.find<UserController>().addannouce("Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !"); 
         } else {
           var data = response.body;
@@ -48,7 +61,19 @@ class ComboController extends GetxController {
     }
     else{
       var data = response.body;
-      Get.snackbar("Thông báo",data["message"]);
+       Get.snackbar(
+            "Thông báo",
+            data["message"],
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.red),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
     }
     update();
   }
@@ -59,6 +84,19 @@ class ComboController extends GetxController {
         return item;
     }
     return null;
+  }
+  Future<List<Comboitem>> getcombobyStoreId(int storeid) async{
+    List<Comboitem> list = [];
+      Response response = await comboRepo.getbystoreid(storeid);
+      if(response.statusCode == 200){
+        var data = response.body;
+        list.addAll(Combomodel.fromJson(data).get_listcombo ?? []);
+        
+      }
+      else{
+        print("Lỗi không lấy được danh sách");
+      }
+      return list;
   }
 }
 /*

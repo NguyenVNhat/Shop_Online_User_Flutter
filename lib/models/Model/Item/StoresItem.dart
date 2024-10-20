@@ -8,7 +8,7 @@ class Storesitem {
   String? numberPhone;
   String? openingTime;
   String? closingTime;
-  String? managerName;
+  int? managerId;
   String? createdAt;
   String? updatedAt;
 
@@ -22,7 +22,7 @@ class Storesitem {
       this.numberPhone,
       this.openingTime,
       this.closingTime,
-      this.managerName,
+      this.managerId,
       this.createdAt,
       this.updatedAt});
 
@@ -36,7 +36,7 @@ class Storesitem {
     numberPhone = json['numberPhone'];
     openingTime = json['openingTime'];
     closingTime = json['closingTime'];
-    managerName = json['managerName'];
+    managerId = json['managerId'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
   }
@@ -52,7 +52,7 @@ class Storesitem {
     data['numberPhone'] = this.numberPhone;
     data['openingTime'] = this.openingTime;
     data['closingTime'] = this.closingTime;
-    data['managerName'] = this.managerName;
+    data['managerId'] = this.managerId;
     data['createdAt'] = this.createdAt;
     data['updatedAt'] = this.updatedAt;
     return data;

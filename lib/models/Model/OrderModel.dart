@@ -1,5 +1,3 @@
-
-
 class Ordermodel {
   bool? status;
   String? message;
