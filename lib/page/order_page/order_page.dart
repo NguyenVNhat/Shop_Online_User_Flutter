@@ -1163,6 +1163,7 @@ class _OrderPageState extends State<OrderPage> {
                                                         ]),
                                                   )),
                                           Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               if (orderController
                                                           .orderlist[index]
@@ -1205,8 +1206,7 @@ class _OrderPageState extends State<OrderPage> {
                                                 if (!orderController
                                                     .orderlist[index].feedback!)
                                                   Container(
-                                                      width: AppDimention
-                                                          .screenWidth,
+                                                      
                                                       margin: EdgeInsets.only(
                                                           left: AppDimention
                                                               .size10,

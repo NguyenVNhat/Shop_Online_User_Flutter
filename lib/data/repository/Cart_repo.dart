@@ -28,4 +28,12 @@ class CartRepo {
     return await apiClient.getData(
         Appconstant.CART_STORE_LISTPRODUCT_URL.replaceFirst("{storeid}", storeid.toString()));
   }
+  Future<Response> deleteCart(int cartId) async {
+    return await apiClient.deleteData(
+        Appconstant.CART_DELETE_URL.replaceFirst("{cartId}", cartId.toString()));
+  }
+  Future<Response>updateCart(int cartId,int quantity) async {
+    return await apiClient.putData(
+        Appconstant.CART_UPDATE_URL.replaceFirst("{cartId}", cartId.toString()).replaceFirst("{quantity}", quantity.toString()),null);
+  }
 }

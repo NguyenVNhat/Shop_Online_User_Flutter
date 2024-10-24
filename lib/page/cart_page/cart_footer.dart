@@ -40,17 +40,17 @@ class _CartFooterState extends State<CartFooter> {
   }
 
   void _order() async {
-    String address = addressController.text.trim();
-    String paymentMethod = selectedPaymentMethod!;
+    // String address = addressController.text.trim();
+    // String paymentMethod = selectedPaymentMethod!;
 
-    await cartController.orderall(address, paymentMethod);
-    if (paymentMethod == "MOMO") {
-      var payUrl = cartController.qrcode.payUrl;
-      final Uri _url = Uri.parse(payUrl!);
-      if (!await launchUrl(_url)) {
-        throw Exception('Could not launch $_url');
-      }
-    }
+    // await cartController.orderall(address, paymentMethod);
+    // if (paymentMethod == "MOMO") {
+    //   var payUrl = cartController.qrcode.payUrl;
+    //   final Uri _url = Uri.parse(payUrl!);
+    //   if (!await launchUrl(_url)) {
+    //     throw Exception('Could not launch $_url');
+    //   }
+    // }
   }
 
   void _showDropdown() {

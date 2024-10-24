@@ -1,5 +1,6 @@
 import 'package:flutter_user_github/data/controller/Auth_controller.dart';
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
+import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
@@ -18,12 +19,13 @@ class HomeHeader extends StatefulWidget {
 class _HomeHeaderState extends State<HomeHeader> {
   final TextEditingController searchController = TextEditingController();
   final authController = Get.find<AuthController>();
-  late int lenghtcart = 0 ;
+  late int lenghtcart = 0;
   @override
   void initState() {
     super.initState();
     lenghtcart = Get.find<CartController>().cartlist.length;
   }
+
   @override
   void dispose() {
     searchController.dispose();
@@ -38,98 +40,77 @@ class _HomeHeaderState extends State<HomeHeader> {
       padding: EdgeInsets.only(
           left: AppDimention.size20, right: AppDimention.size20),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: () {
-              Get.toNamed(AppRoute.CAMERA_PAGE);
+            onTap: (){
+              Get.toNamed(AppRoute.PROFILE_PAGE);
             },
-            child: Icon(
-              Icons.camera_alt_outlined,
-              color: AppColor.mainColor,
-            ),
+            child: Row(
+            children: [
+              Text("Chào mừng ",style: TextStyle(
+                color: Colors.black45
+              ),),
+              Text("${Get.find<UserController>().userprofile!.fullName}",style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500
+              ),),
+            ],
+          ),
           ),
           SizedBox(width: AppDimention.size10),
-          Expanded(
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: "Search ...",
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColor.yellowColor,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimention.size30),
-                  borderSide: BorderSide(width: 1.0, color: Colors.white),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimention.size30),
-                  borderSide: BorderSide(width: 1.0, color: Colors.white),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimention.size30),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: AppDimention.size5,
-          ),
           Obx(() {
             if (!authController.IsLogin.value) {
-              return Container(
-              );
+              return Container();
             } else {
               return Container(
-                  width: 40,
-                  height: 40,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        bottom: 0,
-                        child: GestureDetector(
-                          onTap: () {
-                            Get.toNamed(AppRoute.CART_PAGE);
-                          },
-                          child: Icon(
-                            Icons.shopping_cart_outlined,
-                            color: Colors.black,
-                            size: AppDimention.size30,
-                          ),
+                width: 40,
+                height: 40,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      bottom: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.toNamed(AppRoute.CART_PAGE);
+                        },
+                        child: Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Colors.black,
+                          size: AppDimention.size30,
                         ),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        width: 20,
-                        height: 20,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(20),
-                            ),
-                            border: Border.all(color: Colors.white, width: 2),
-                            color: AppColor.mainColor,
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      width: 20,
+                      height: 20,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(20),
                           ),
-                          child: Container(
-                              width: AppDimention.size10,
-                              height: AppDimention.size10,
-                              child: Center(
-                                child: Text(
-                                 lenghtcart.toString(),
-                                  style: TextStyle(color: Colors.white, fontSize: 12),
-                                ),
-                              )),
+                          border: Border.all(color: Colors.white, width: 2),
+                          color: AppColor.mainColor,
                         ),
-                      )
-                    ],
-                  ),
-                );
-              }
+                        child: Container(
+                            width: AppDimention.size10,
+                            height: AppDimention.size10,
+                            child: Center(
+                              child: Text(
+                                lenghtcart.toString(),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 12),
+                              ),
+                            )),
+                      ),
+                    )
+                  ],
+                ),
+              );
             }
-          ),
-
-          
+          }),
         ],
       ),
     );

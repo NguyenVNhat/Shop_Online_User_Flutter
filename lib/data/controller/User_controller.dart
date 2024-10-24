@@ -29,16 +29,22 @@ class UserController extends GetxController implements GetxService {
     _isLoading = false;
     update();
   }
-
+  bool? loadreceiver ;
+  bool? get getloadreceiver => loadreceiver;
   Future<User?> getbyid(int id)async{
+    loadreceiver = true;
     Response response = await userRepo.getbyid(id);
     if (response.statusCode == 200) {
       var data = response.body;
+      loadreceiver = false;
+      update();
       return Usermodel.fromJson(data).getuser!;
     }
     else{
       print("Lỗi tìm người dùng");
     }
+    loadreceiver = false;
+    update();
   }
   
   String? base64Image = null;

@@ -98,7 +98,7 @@ class CartController extends GetxController implements GetxService {
   bool? get getordering => ordering;
 
   // * Hàm thanh toán đơn hàng
-  Future<void> orderall(String address, String paymentMethod) async {
+  Future<void> orderall(String address, String paymentMethod,double latitude,double longitude) async {
     ordering = true;
     // * Thanh toán các đơn nằm được chọn 
     if (!listcartinorder.isEmpty) {
@@ -112,7 +112,9 @@ class CartController extends GetxController implements GetxService {
       Response response = await cartRepo.orderproductintcart(Cartdto(
           cartlist: listIdCartItem,
           deliveryAddress: address,
-          paymentMethod: paymentMethod));
+          paymentMethod: paymentMethod,
+          latitude: latitude,
+          longitude: longitude));
       if (response.statusCode == 200) {
         if (paymentMethod == "CASH") {
            Get.snackbar(
@@ -159,7 +161,7 @@ class CartController extends GetxController implements GetxService {
   }
 
   // * Hàm cập nhật tổng tiền giỏ hàng
-  void updateTotal(double newtotal) {
+  void updateTotal(int newtotal) {
     this._totalprice = newtotal.toInt();
     update();
   }
@@ -190,6 +192,48 @@ class CartController extends GetxController implements GetxService {
       _IDSelectedItem.remove(id);
     }
     update();
+  }
+  Future<void> deleteCart(int cartId) async{
+    Response response = await cartRepo.deleteCart(cartId);
+    if(response.statusCode == 200){
+      Get.snackbar(
+            "Thông báo",
+            "Xóa  giỏ hàng thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
+    }
+    else{
+      print("Xóa giỏ hàng thất bại ${response.body["message"]}");
+    }
+  }
+  Future<void> updateCart(int cartId,int quantity) async{
+    Response response = await cartRepo.updateCart(cartId,quantity);
+    if(response.statusCode == 200){
+      Get.snackbar(
+            "Thông báo",
+            "Cập nhật giỏ hàng thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
+    }
+    else{
+      print("Cập nhật giỏ hàng thất bại ${response.body["message"]}");
+    }
   }
 
  

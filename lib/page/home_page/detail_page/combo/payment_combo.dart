@@ -51,6 +51,7 @@ class _PaymentComboState extends State<PaymentCombo> {
   bool? haveDrink = false;
   String? selectedValue;
   int? storeid;
+  bool ischangePoint = false;
 
   String? selectedPayment;
   List<String> paymentMethod = ["CASH", "MOMO", "ZALOPAY"];
@@ -203,6 +204,24 @@ class _PaymentComboState extends State<PaymentCombo> {
       selectedVoucher = value;
     });
   }
+  double? longitude;
+  double? latitude;
+  Future<bool> getCoordinatesFromAddress(String address) async {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        setState(() {
+          latitude = locations.first.latitude;
+          longitude = locations.first.longitude;
+        });
+        print('Latitude: $latitude, Longitude: $longitude');
+        return true;
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+    return false;
+  }
    double zoomValue = 14;
   MapController mapController = MapController();
   LatLng tappedPoint = LatLng(16.0471, 108.2068);
@@ -214,6 +233,7 @@ class _PaymentComboState extends State<PaymentCombo> {
       setState(() {
         tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
         loadlocation = true;
+        ischangePoint = true;
         print(2);
       });
       }
@@ -230,6 +250,7 @@ class _PaymentComboState extends State<PaymentCombo> {
       setState(() {
         tappedPoint = LatLng(addresspoint.latitude!, addresspoint.longtitude!);
         loadlocation = true;
+        ischangePoint = true;
         print(1);
       });
       }
@@ -419,12 +440,11 @@ class _PaymentComboState extends State<PaymentCombo> {
       });
     } else {
       int idcombo = comboitem!.comboId!;
-      int? drinkid;
-      try {
+      int? drinkid = 0;
+      if(productitem != null){
         drinkid = productitem!.productId!;
-      } catch (e) {
-        drinkid = null;
       }
+      
 
       String address = HomenumberController.text +
         " " +
@@ -440,18 +460,39 @@ class _PaymentComboState extends State<PaymentCombo> {
       String sizename = Get.find<SizeController>().sizename;
 
       // String voucher = selectedVoucher != null ? selectedVoucher! : "";
-
-
-      Ordercombodto dto = Ordercombodto(
+      
+      if(ischangePoint){
+        longitude = tappedPoint.longitude;
+        latitude = tappedPoint.latitude;
+      }
+      else{
+        getCoordinatesFromAddress(address);
+      }
+      Ordercombodto dto;
+      if(productitem != null)
+      
+       dto = Ordercombodto(
           paymentMethod: paymentMethod,
           comboId: idcombo,
-          drinkId: drinkid,
+          drinkIds: [drinkid],
           storeId: storeId,
           quantity: quantity,
           size: sizename,
           deliveryAddress: address,
-          latitude: tappedPoint.latitude,
-          longitude: tappedPoint.longitude);
+          latitude: latitude,
+          longitude: longitude);
+      else{
+         dto = Ordercombodto(
+          paymentMethod: paymentMethod,
+          comboId: idcombo,
+          drinkIds: [],
+          storeId: storeId,
+          quantity: quantity,
+          size: sizename,
+          deliveryAddress: address,
+          latitude: latitude,
+          longitude: longitude);
+      }
       await combocontroller.order(dto);
       if (paymentMethod == "MOMO") {
         var payUrl = combocontroller.qrcode.payUrl;

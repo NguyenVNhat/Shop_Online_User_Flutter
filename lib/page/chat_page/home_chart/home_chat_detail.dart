@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,7 +25,7 @@ class HomeChatDetail extends StatefulWidget {
 }
 
 class _HomeChatDetailState extends State<HomeChatDetail> {
-  List<Usermessage> listchart = [];
+   List<Usermessage> listchart = [];
   late ChartController chatController = Get.find<ChartController>();
   TextEditingController sendController = TextEditingController();
   late UserController userController = Get.find<UserController>();
@@ -37,14 +38,14 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
   File? _image;
   String imagebase64 = "";
 
-  // connect websocket
   late IOWebSocketChannel _channel;
+  StreamSubscription? _subscription;
 
   @override
   void initState() {
     super.initState();
     loadData(widget.idreceiver);
-
+    print("Start socket");
     HttpClient client = HttpClient()
       ..badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
@@ -54,17 +55,15 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
     );
     startSessionSocket();
 
-    _channel.stream.listen((message) {
+    _subscription = _channel.stream.listen((message) {
       setState(() {
         var decodedMessage = jsonDecode(message);
         listchart.add(Usermessage.fromJson(decodedMessage));
       });
       print("Tin nhắn nhận được: $message");
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
     });
+
     focusNode.addListener(() {
       if (focusNode.hasFocus) {
         print(":focus");
@@ -79,19 +78,24 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
       "userId": user1!.id,
     };
     _channel.sink.add(jsonEncode(data));
+    print("Start success");
   }
 
-  void loadData(int idreceiver) async {
+  Future<void> loadData(int idreceiver) async {
     setState(() {
       loaded = false;
+      listchart.clear(); 
     });
-    listchart = [];
+    
     user1 = userController.userprofile;
     await chatController.getlistmessage(idreceiver);
     user2 = await userController.getbyid(idreceiver);
-    while (chatController.getisLoadingMessage) {
-      Future.delayed(const Duration(milliseconds: 100));
+
+    // Đợi cho đến khi dữ liệu được tải xong
+    while (chatController.getisLoadingMessage || userController.loadreceiver!) {
+      await Future.delayed(const Duration(milliseconds: 100));
     }
+    
     setState(() {
       listchart = chatController.getlistusermesage;
       loaded = true;
@@ -101,6 +105,7 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
 
   bool isPicking = false;
   bool haveImage = false;
+
   Future<void> _pickImage() async {
     if (isPicking) return;
     setState(() {
@@ -128,41 +133,6 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
     }
   }
 
-  void _reconnect() {
-    Future.delayed(Duration(seconds: 5), () {
-      HttpClient client = HttpClient()
-        ..badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-      _channel = IOWebSocketChannel.connect(
-        Uri.parse('ws://192.168.1.39:8080/ws/chat'),
-        customClient: client,
-      );
-      startSessionSocket();
-      _channel.stream.listen(
-        (message) {
-          setState(() {
-            try {
-              var decodedMessage = jsonDecode(message);
-              setState(() {
-                listchart.add(Usermessage.fromJson(decodedMessage));
-              });
-            } catch (e) {
-              print("Lỗi khi giải mã tin nhắn: $e");
-            }
-          });
-          print("Tin nhắn nhận được: $message");
-        },
-        onError: (error) {
-          print("Lỗi WebSocket: $error");
-        },
-        onDone: () {
-          print("Kết nối WebSocket đã đóng");
-          _reconnect();
-        },
-      );
-    });
-  }
-
   void _sendMessage() {
     String message = sendController.text.trim();
     if (message.isNotEmpty) {
@@ -179,10 +149,12 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
       userController.addannouceV2(user2!.id!, "Thông báo",
           "Bạn vừa có tin nhắn từ ${user1!.fullName!}");
     }
-    if (!imagebase64.isEmpty) {
+
+    if (imagebase64.isNotEmpty) {
       chatController.senImage(user1!.id!, user2!.id!, imagebase64);
       updateData(user2!.id!);
     }
+
     setState(() {
       haveImage = false;
     });
@@ -190,9 +162,7 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
   }
 
   Future<void> updateData(int idreceiver) async {
-    listchart.clear();
-
-    loadData(idreceiver);
+    await loadData(idreceiver);
     setState(() {
       _image = null;
       imagebase64 = "";
@@ -211,9 +181,11 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
 
   @override
   void dispose() {
+    _subscription?.cancel(); // Hủy bỏ listener khi dispose
     _channel.sink.close();
     focusNode.dispose();
     sendController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 

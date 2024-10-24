@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Model/CartModel.dart';
@@ -9,9 +10,11 @@ import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CartOrder extends StatefulWidget {
@@ -175,13 +178,7 @@ class _CartOrderState extends State<CartOrder> {
   bool? isload = false;
   String? announce = "";
   Future<void> _order() async {
-    String address = HomenumberController.text +
-        " " +
-        StreetController.text +
-        ", " +
-        DistrictController.text +
-        ", " +
-       selectedProvince!;
+    
     String paymentMethod = selectedPayment!;
     if (paymentMethod.isEmpty ||
         HomenumberController.text.isEmpty ||
@@ -192,7 +189,23 @@ class _CartOrderState extends State<CartOrder> {
         announce = "Vui lòng nhập đủ thông tin";
       });
     } else {
-      cartController.orderall(address, paymentMethod);
+      
+      String address = HomenumberController.text +
+        " " +
+        StreetController.text +
+        ", " +
+        DistrictController.text +
+        ", " +
+       selectedProvince!;
+      if(ischangePoint == true){
+        longitude = tappedPoint.longitude;
+        latitude = tappedPoint.latitude;
+      }
+      else{
+        getCoordinatesFromAddress(address);
+      }
+
+      cartController.orderall(address, paymentMethod,latitude!,longitude!);
       while (cartController.ordering!) {
         await Future.delayed(const Duration(microseconds: 100));
       }
@@ -209,6 +222,212 @@ class _CartOrderState extends State<CartOrder> {
         }
       }
     }
+  }
+   double zoomValue = 14;
+  MapController mapController = MapController();
+  LatLng tappedPoint = LatLng(16.0471, 108.2068);
+  bool? ischangePoint = false;
+  bool loadlocation = false;
+  FunctionMap functionmap = FunctionMap();
+  void _showDropdown() async {
+      if (selectedProvince== null || selectedProvince!.isEmpty || HomenumberController.text.isEmpty ||StreetController.text.isEmpty || DistrictController.text.isEmpty ) {
+        Point mypoint = await functionmap.getCurrentLocation() as Point;
+      setState(() {
+        tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
+        loadlocation = true;
+        ischangePoint = true;
+        print(2);
+      });
+      }
+      else{
+         Point addresspoint = await functionmap.getCoordinatesFromAddress(
+          HomenumberController.text +
+              " " +
+              StreetController.text +
+              ", " +
+              DistrictController.text +
+              ", " +
+              selectedProvince!) as Point;
+
+      setState(() {
+        tappedPoint = LatLng(addresspoint.latitude!, addresspoint.longtitude!);
+        ischangePoint = true;
+        loadlocation = true;
+        print(1);
+      });
+      }
+     
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            width: AppDimention.screenWidth,
+            height: AppDimention.size100 * 5,
+            decoration: BoxDecoration(color: Colors.amber),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Stack(
+                  children: [
+                    loadlocation
+                        ? FlutterMap(
+                            mapController: mapController,
+                            options: MapOptions(
+                              initialCenter: tappedPoint,
+                              initialZoom: zoomValue,
+                              onTap: (tapPosition, LatLng latlng) {
+                                setState(() {
+                                  tappedPoint = latlng;
+                                  mapController.move(tappedPoint, zoomValue);
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Tọa độ: ${latlng.latitude}, ${latlng.longitude}',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                subdomains: ['a', 'b', 'c'],
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    width: 100.0,
+                                    height: 80.0,
+                                    point: tappedPoint,
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          color: Colors.red,
+                                          size: 40,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : CircularProgressIndicator(),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: GestureDetector(
+                        onTap: () {
+                          mapController.move(tappedPoint, zoomValue);
+                        },
+                        child: Container(
+                          width: AppDimention.size40,
+                          height: AppDimention.size40,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size5),
+                              border:
+                                  Border.all(width: 1, color: Colors.black26)),
+                          child: Center(
+                            child: Icon(
+                              Icons.my_location,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                        top: 10,
+                        right: 10,
+                        child: GestureDetector(
+                          onTap: () {
+                            mapController.move(tappedPoint, zoomValue);
+                          },
+                          child: Container(
+                            width: AppDimention.size40,
+                            height: AppDimention.size40,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size5),
+                                border: Border.all(
+                                    width: 1, color: Colors.black26)),
+                            child: Center(
+                              child: Icon(
+                                Icons.my_location,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        )),
+                    Positioned(
+                        top: 10,
+                        left: 10,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              zoomValue = zoomValue + 1;
+                            });
+                            mapController.move(tappedPoint, zoomValue);
+                          },
+                          child: Container(
+                            width: AppDimention.size40,
+                            height: AppDimention.size40,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size5),
+                                border: Border.all(
+                                    width: 1, color: Colors.black26)),
+                            child: Center(
+                              child: Icon(
+                                Icons.zoom_out_map_outlined,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        )),
+                    Positioned(
+                        top: 10,
+                        left: 60,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              zoomValue = zoomValue - 1;
+                            });
+                            mapController.move(tappedPoint, zoomValue);
+                          },
+                          child: Container(
+                            width: AppDimention.size40,
+                            height: AppDimention.size40,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size5),
+                                border: Border.all(
+                                    width: 1, color: Colors.black26)),
+                            child: Center(
+                              child: Icon(
+                                Icons.zoom_in_map_outlined,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        )),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -638,6 +857,24 @@ class _CartOrderState extends State<CartOrder> {
                     ],
                   ),
                 ),
+                 Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _showDropdown();
+                      },
+                      child: Text(
+                        "Gim map",
+                        style: TextStyle(color: Colors.black38),
+                      ),
+                    ),
+                    SizedBox(
+                      width: AppDimention.size10,
+                    ),
+                  ],
+                ),
+                
                 SizedBox(
                   height: AppDimention.size15,
                 ),

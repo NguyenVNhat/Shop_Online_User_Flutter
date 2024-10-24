@@ -8,6 +8,7 @@ import 'package:flutter_user_github/data/controller/Chart_controller.dart';
 import 'package:flutter_user_github/data/controller/Combo_controller.dart';
 import 'package:flutter_user_github/data/controller/Order_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
@@ -18,6 +19,7 @@ import 'package:flutter_user_github/data/repository/Chart_repo.dart';
 import 'package:flutter_user_github/data/repository/Combo_repo.dart';
 import 'package:flutter_user_github/data/repository/Order_repo.dart';
 import 'package:flutter_user_github/data/repository/Product_repo.dart';
+import 'package:flutter_user_github/data/repository/Promotion_repo.dart';
 import 'package:flutter_user_github/data/repository/Size_repo.dart';
 import 'package:flutter_user_github/data/repository/Store_repo.dart';
 import 'package:flutter_user_github/data/repository/User_repo.dart';
@@ -58,6 +60,9 @@ Future<void> init() async {
 
   Get.lazyPut(() => ChartRepo(apiClient: Get.find()));
   Get.lazyPut(() => ChartController(chartRepo: Get.find()));
+
+  Get.lazyPut(() => PromotionRepo(apiClient: Get.find()));
+  Get.lazyPut(() => PromotionController(promotionRepo: Get.find()));
 
   Get.put(CartRepo(apiClient: Get.find()));
   Get.put(CartController(cartRepo: Get.find()));

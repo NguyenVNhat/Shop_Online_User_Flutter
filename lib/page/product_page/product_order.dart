@@ -2,17 +2,21 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Dto/OrderProductDto.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
+import 'package:flutter_user_github/models/Model/PromotionModel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
@@ -40,6 +44,7 @@ class _ProductOrderState extends State<ProductOrder> {
   TextEditingController searchRecommend = TextEditingController();
 
   ProductController productController = Get.find<ProductController>();
+  PromotionController promotionController = Get.find<PromotionController>();
 
   FunctionMap functionmap = FunctionMap();
   List<String> listprovince = [];
@@ -73,12 +78,30 @@ class _ProductOrderState extends State<ProductOrder> {
           (Match match) => '${match[1]}.',
         );
   }
-
+ double? longitude;
+  double? latitude;
+  Future<bool> getCoordinatesFromAddress(String address) async {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        setState(() {
+          latitude = locations.first.latitude;
+          longitude = locations.first.longitude;
+        });
+        print('Latitude: $latitude, Longitude: $longitude');
+        return true;
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+    return false;
+  }
   void _getaddress() {
     User user = Get.find<UserController>().userprofile!;
     setState(() {
       String address = user.address!;
       List<String> listaddress = address.split(",");
+      print(listaddress);
       setState(() {
         HomenumberController.text = listaddress[0];
         StreetController.text = listaddress[1];
@@ -100,6 +123,7 @@ class _ProductOrderState extends State<ProductOrder> {
   //Select store
   int? storeid;
   void onChanged(String? value, int id) {
+    promotionController.getbystoreid(id!);
     setState(() {
       storeid = id;
     });
@@ -116,9 +140,8 @@ class _ProductOrderState extends State<ProductOrder> {
   }
 
   // Select voucher
-  String? selectedVoucher;
-  List<String> paymentVoucher = ["1110NVV", "2010NGVN", "2011PHVN"];
-  void onChangedVoucher(String? value) {
+  int? selectedVoucher;
+  void onChangedVoucher(int? value) {
     setState(() {
       selectedVoucher = value;
     });
@@ -128,18 +151,23 @@ class _ProductOrderState extends State<ProductOrder> {
   MapController mapController = MapController();
   LatLng tappedPoint = LatLng(16.0471, 108.2068);
   bool loadlocation = false;
+  bool isChangePoint = false;
 
   void _showDropdown() async {
-      if (selectedProvince== null || selectedProvince!.isEmpty || HomenumberController.text.isEmpty ||StreetController.text.isEmpty || DistrictController.text.isEmpty ) {
-        Point mypoint = await functionmap.getCurrentLocation() as Point;
+    if (selectedProvince == null ||
+        selectedProvince!.isEmpty ||
+        HomenumberController.text.isEmpty ||
+        StreetController.text.isEmpty ||
+        DistrictController.text.isEmpty) {
+      Point mypoint = await functionmap.getCurrentLocation() as Point;
       setState(() {
         tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
         loadlocation = true;
+        isChangePoint = true;
         print(2);
       });
-      }
-      else{
-         Point addresspoint = await functionmap.getCoordinatesFromAddress(
+    } else {
+      Point addresspoint = await functionmap.getCoordinatesFromAddress(
           HomenumberController.text +
               " " +
               StreetController.text +
@@ -151,10 +179,10 @@ class _ProductOrderState extends State<ProductOrder> {
       setState(() {
         tappedPoint = LatLng(addresspoint.latitude!, addresspoint.longtitude!);
         loadlocation = true;
+        isChangePoint = true;
         print(1);
       });
-      }
-     
+    }
 
     showDialog(
       context: context,
@@ -327,6 +355,7 @@ class _ProductOrderState extends State<ProductOrder> {
       },
     );
   }
+
   // Order
   String? announce = "";
   void _order() async {
@@ -335,7 +364,7 @@ class _ProductOrderState extends State<ProductOrder> {
         StreetController.text.isEmpty ||
         selectedProvince!.isEmpty ||
         storeid == null ||
-        selectedPayment!.isEmpty) {
+        selectedPayment == null) {
       setState(() {
         announce = "Vui lòng nhập đủ thông tin";
       });
@@ -352,6 +381,15 @@ class _ProductOrderState extends State<ProductOrder> {
           ", " +
           selectedProvince!;
 
+      if(isChangePoint){
+        longitude = tappedPoint.longitude;
+        latitude = tappedPoint.latitude;
+      }
+      else{
+        getCoordinatesFromAddress(address);
+      }
+
+
       Orderproductdto dto = Orderproductdto(
           productId: productid,
           quantity: quantityOrder,
@@ -359,8 +397,8 @@ class _ProductOrderState extends State<ProductOrder> {
           paymentMethod: selectedPayment,
           size: sizeOrder,
           storeId: storeId,
-          latitude: tappedPoint.latitude,
-          longitude: tappedPoint.longitude);
+          latitude: latitude,
+          longitude: longitude);
       await productController.order(dto);
       if (selectedPayment == "MOMO") {
         var payUrl = productController.qrcode.payUrl;
@@ -371,7 +409,6 @@ class _ProductOrderState extends State<ProductOrder> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1048,94 +1085,221 @@ class _ProductOrderState extends State<ProductOrder> {
                     },
                   ),
                 ),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: AppDimention.size10,
-                    ),
-                    Text("Mã giảm giá"),
-                  ],
-                ),
-                Container(
-                  width: AppDimention.screenWidth,
-                  padding: EdgeInsets.all(AppDimention.size10),
-                  decoration: BoxDecoration(),
-                  child: DropdownButtonFormField(
-                    dropdownColor: Colors.amber,
-                    hint: Text(
-                      "Chọn mã giảm giá",
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
-                    ),
-                    items: paymentVoucher.map((item) {
-                      return DropdownMenuItem(
-                        value: item,
-                        child: Container(
-                          width: AppDimention.size100 * 3.8,
-                          margin: EdgeInsets.only(
-                              top: AppDimention.size10,
-                              bottom: AppDimention.size10),
-                          padding: EdgeInsets.all(AppDimention.size10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                  width: AppDimention.size100 * 3.8,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        item,
-                                      ),
-                                      Text("10000 vnđ")
-                                    ],
-                                  )),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      var selectedMethod = value as String;
-                      onChangedVoucher(selectedMethod);
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: Colors.grey,
-                          width: 1.0,
-                        ),
+                if (storeid != null)
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: AppDimention.size10,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: Colors.grey,
-                          width: 1.0,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: Colors.green,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    selectedItemBuilder: (BuildContext context) {
-                      return paymentVoucher.map((item) {
-                        return Container(
-                          alignment: Alignment.centerLeft,
-                          height: 60,
-                          width: AppDimention.size100 * 3,
-                          child: Text(item, style: TextStyle(fontSize: 16)),
-                        );
-                      }).toList();
-                    },
+                      Text("Mã giảm giá"),
+                    ],
                   ),
-                ),
+                if (storeid != null)
+                  GetBuilder<PromotionController>(builder: (controller) {
+                    return controller.getloadingStoreId!
+                        ? Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : controller.listpromotionByStoreId.length == 0
+                            ? Center(
+                                child: Text(
+                                  "Cửa hàng này không có đơn hàng cho sản phẩm",
+                                  style: TextStyle(color: Colors.black45),
+                                ),
+                              )
+                            : Container(
+                                width: AppDimention.screenWidth,
+                                padding: EdgeInsets.all(AppDimention.size10),
+                                decoration: BoxDecoration(),
+                                child: DropdownButtonFormField(
+                               
+                                  hint: Text(
+                                    "Chọn mã giảm giá",
+                                    style: TextStyle(
+                                        color: Colors.black26, fontSize: 12),
+                                  ),
+                                  items: controller.getlistpromotionByStoreId
+                                      .map((item) {
+                                    return DropdownMenuItem(
+                                      value: item,
+                                      child: Container(
+                                        width: AppDimention.size100 * 3.8,
+                                        margin: EdgeInsets.only(
+                                            top: AppDimention.size10,
+                                            bottom: AppDimention.size10),
+                                       
+                                        
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              width: AppDimention.screenWidth,
+                                              height: AppDimention.size130,
+                                              margin: EdgeInsets.only(
+                                                  left: AppDimention.size10,
+                                                  right: AppDimention.size10,
+                                                  bottom: AppDimention.size10),
+                                              decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                      fit: BoxFit.cover,
+                                                      image: AssetImage(
+                                                        "assets/image/Voucher0.png",
+                                                      )),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          AppDimention.size10)),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: AppDimention.size60,
+                                                    height:
+                                                        AppDimention.size130,
+                                                    decoration: BoxDecoration(
+                                                        border: Border(
+                                                            right: BorderSide(
+                                                                width: 5,
+                                                                color: Colors
+                                                                    .black12))),
+                                                    child: Center(
+                                                      child: Text(
+                                                        "${item.discountPercentage!.toInt()}%",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    width:
+                                                        AppDimention.size100 *
+                                                            2.5,
+                                                    height:
+                                                        AppDimention.size130,
+                                                    padding: EdgeInsets.all(
+                                                        AppDimention.size10),
+                                                    child: Column(
+                                                      children: [
+                                                        Container(
+                                                            width: AppDimention
+                                                                    .size100 *
+                                                                2.5,
+                                                            height: AppDimention
+                                                                    .size130 *
+                                                                0.6,
+                                                            child: Column(
+                                                              children: [
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .end,
+                                                                  children: [
+                                                                    Text(
+                                                                      item.startDate !=
+                                                                              null
+                                                                          ? "${DateFormat('dd/MM/yyyy').format(DateTime.parse(item.startDate!))}"
+                                                                          : "",
+                                                                      style: TextStyle(
+                                                                          color:
+                                                                              Colors.white),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                Row(
+                                                                  children: [
+                                                                    Container(
+                                                                      width: AppDimention
+                                                                          .size100,
+                                                                      child: Text(
+                                                                          "${item.name}",
+                                                                          maxLines:
+                                                                              2,
+                                                                          style: TextStyle(
+                                                                              fontWeight: FontWeight.w600,
+                                                                              fontSize: 16,
+                                                                              color: Colors.white)),
+                                                                    )
+                                                                  ],
+                                                                )
+                                                              ],
+                                                            )),
+                                                        Container(
+                                                            width: AppDimention
+                                                                    .size100 *
+                                                                2.5,
+                                                            height: AppDimention
+                                                                    .size130 *
+                                                                0.2,
+                                                            child: Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .end,
+                                                              children: [
+                                                                Text(
+                                                                  item.startDate !=
+                                                                          null
+                                                                      ? " ${DateFormat('dd/MM/yyyy').format(DateTime.parse(item.endDate!))}"
+                                                                      : "",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .white),
+                                                                ),
+                                                              ],
+                                                            ))
+                                                      ],
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    var selectedVoucher =
+                                        value as PromotionData;
+                                    onChangedVoucher(selectedVoucher.id);
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.green,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                  ),
+                                  selectedItemBuilder: (BuildContext context) {
+                                    return controller.listpromotion.map((item) {
+                                      return Container(
+                                        alignment: Alignment.centerLeft,
+                                        height: 60,
+                                        width: AppDimention.size100 * 3,
+                                        child: Text(item.name!,
+                                            style: TextStyle(fontSize: 16)),
+                                      );
+                                    }).toList();
+                                  },
+                                ),
+                              );
+                  }),
                 Row(
                   children: [
                     SizedBox(

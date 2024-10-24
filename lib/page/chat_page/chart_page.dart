@@ -50,6 +50,7 @@ class _ChartPageState extends State<ChartPage>
       Uri.parse('ws://192.168.1.39:8080/ws/chat'),
       customClient: client,
     );
+    print("Start socket");
     startSessionSocket();
 
     _channel.stream.listen((message) {
@@ -133,6 +134,7 @@ class _ChartPageState extends State<ChartPage>
       "type": "identify",
       "userId": idme,
     };
+    print("Start success");
     _channel.sink.add(jsonEncode(data));
   }
 

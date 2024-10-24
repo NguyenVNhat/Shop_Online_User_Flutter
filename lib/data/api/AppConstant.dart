@@ -34,6 +34,8 @@ class Appconstant {
   
   static const String ADD_TOCART_URL = "/api/v1/user/cart/add/product?productId={productid}&quantity={quantity}&storeId={storeid}&size={size}";
   static const String CART_URL = "/api/v1/user/cart/history";
+  static const String CART_DELETE_URL = "/api/v1/user/cart/delete/{cartId}";
+  static const String CART_UPDATE_URL = "/api/v1/user/cart/update?cartId={cartId}&quantity={quantity}";
   static const String CART_BYID_URL = "/api/v1/user/cart/{cartid}";
   static const String CART_STORE_URL = "/api/v1/user/cart/allstore";
   static const String CART_STORE_LISTPRODUCT_URL = "/api/v1/user/cart/store/{storeid}";
@@ -55,6 +57,9 @@ class Appconstant {
 
   static const String SIZE_URL = "/api/v1/public/sizes/all";
   static const String SIZE_BY_ID_URL = "/api/v1/public/sizes/{id}";
+
+  static const String PROMOTION_URL = "/api/v1/public/promotions/all";
+  static const String PROMOTION_BYSTOREID_URL = "/api/v1/public/promotions/store/{id}";
 
   static const String SAVE_CHART_IMAGE = "/api/chats/saveImages";
   static const String CHART_URL = "/api/chats/users-chat";

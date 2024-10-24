@@ -365,6 +365,9 @@ class ProductController extends GetxController {
         print("PAYURRL ${_qrcode.payUrl}");
       }
     }
+    else{
+      print("Lỗi đặt hàng ${response.statusCode} ${response.body["message"]}");
+    }
     loadingOrder = false;
     update();
   }

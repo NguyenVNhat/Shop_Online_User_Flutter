@@ -2,6 +2,7 @@ import 'package:flutter_user_github/data/controller/Cart_controller.dart';
 import 'package:flutter_user_github/data/controller/Category_controller.dart';
 import 'package:flutter_user_github/data/controller/Combo_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
@@ -26,6 +27,7 @@ class _BarLoadingScreenState extends State<BarLoadingScreen>
   ProductController productController = Get.find<ProductController>();
   Storecontroller storecontroller = Get.find<Storecontroller>();
   CategoryController categoryController = Get.find<CategoryController>();
+  PromotionController promotionController = Get.find<PromotionController>();
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _BarLoadingScreenState extends State<BarLoadingScreen>
         comboController.isLoading ||
         productController.isLoading ||
         storecontroller.isLoading ||
+        promotionController.getloading! ||
         categoryController.isLoading!) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
