@@ -1,9 +1,11 @@
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/data/repository/Combo_repo.dart';
+import 'package:flutter_user_github/models/Dto/AddComboToCartDto.dart';
 import 'package:flutter_user_github/models/Dto/OrderComboDto.dart';
 import 'package:flutter_user_github/models/Model/ComboModel.dart';
 import 'package:flutter_user_github/models/Model/Item/ComboItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -17,6 +19,7 @@ class ComboController extends GetxController {
 
   List<Comboitem> _comboList = [];
   List<Comboitem> get comboList => _comboList;
+
 
 
   Future<void> getall() async {
@@ -35,10 +38,18 @@ class ComboController extends GetxController {
   }
   MomoModels _qrcode = MomoModels();
   MomoModels get qrcode => _qrcode;
+   ZaloData _qrcodeZalo = ZaloData();
+  ZaloData get qrcodeZalo => _qrcodeZalo;
+
+  bool ordering  = false;
+  bool get getordering  => ordering;
   Future<void> order(Ordercombodto dto) async{
+    ordering = true;
     Response response = await comboRepo.order(dto);
     if(response.statusCode == 200){
+      var data = response.body;
       if (dto.paymentMethod == "CASH") {
+        
            Get.snackbar(
             "Thông báo",
             "Đặt đơn hàng thành công",
@@ -53,10 +64,14 @@ class ComboController extends GetxController {
             
           );
           Get.find<UserController>().addannouce("Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !"); 
-        } else {
-          var data = response.body;
+        } else if (dto.paymentMethod  == "MOMO") {
+          
           _qrcode = (MomoModels.fromJson(data).momo);
           print( "PAYURRL ${_qrcode.payUrl}");
+        }
+        else{
+        _qrcodeZalo = ZaloModels.fromJson(data).getzalodata!;
+        print( "ZALOURL ${_qrcode.payUrl}");
         }
     }
     else{
@@ -75,6 +90,7 @@ class ComboController extends GetxController {
             
           );
     }
+    ordering = false;
     update();
   }
 
@@ -97,6 +113,27 @@ class ComboController extends GetxController {
         print("Lỗi không lấy được danh sách");
       }
       return list;
+  }
+  Future<void> addcombotocart(Combotocartdto dto) async{
+    Response response = await comboRepo.addtocarrt(dto);
+    if(response.statusCode == 200){
+        Get.snackbar(
+            "Thông báo",
+            "Thêm vào giỏ hàng thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+            
+          );
+    }
+    else{
+      print("Lỗi thêm combo vào giỏ hàng ${response.statusCode}");
+    }
   }
 }
 /*

@@ -1,4 +1,5 @@
 import 'package:flutter_user_github/data/repository/Store_repo.dart';
+import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/models/Model/StoreModel.dart';
 import 'package:get/get.dart';
@@ -31,16 +32,24 @@ class Storecontroller extends GetxController {
     update();
   }
 
-  String addressOfStore(int storeid){
-    for(Storesitem item in _storeList){
-      if(item.storeId == storeid){
+  String addressOfStore(int storeid) {
+    for (Storesitem item in _storeList) {
+      if (item.storeId == storeid) {
         return item.location!;
       }
     }
     return "";
   }
 
-  Storesitem? _storeItem ;
+  Storesitem? getStoreById(int idstore) {
+    for (Storesitem item in _storeList) {
+      if (item.storeId == idstore) {
+        return item;
+      }
+    }
+  }
+
+  Storesitem? _storeItem;
   Storesitem? get storeItem => _storeItem;
   bool _isLoadingItem = false;
   bool get isLoadingItem => _isLoadingItem;
@@ -53,7 +62,7 @@ class Storecontroller extends GetxController {
       _storeItem = Storesitem.fromJson(data["data"]);
       print("Lấy chi tiết cửa hàng thành công");
     } else {
-      print("Lỗi không lấy được cửa hàng"+ response.statusCode.toString());
+      print("Lỗi không lấy được cửa hàng" + response.statusCode.toString());
     }
     _isLoadingItem = false;
     update();
@@ -67,5 +76,33 @@ class Storecontroller extends GetxController {
     } else {
       return "No name";
     }
+  }
+  bool loadingCommonStore = false;
+  bool get getloadingCommonStore => loadingCommonStore;
+
+  List<Storesitem> getCommonStores(List<Productitem> listproduct) {
+    loadingCommonStore = true;
+    if (listproduct.isEmpty) {
+      print("Danh sách sản phẩm trống.");
+      return [];
+    }
+    List<Storesitem> initialStores = listproduct[0].stores!;
+    Set<String?> commonStoreNames =
+        initialStores.map((store) => store.storeName).toSet();
+    for (int i = 1; i < listproduct.length; i++) {
+      List<Storesitem> currentStores = listproduct[i].stores!;
+      Set<String?> currentStoreNames =
+          currentStores.map((store) => store.storeName).toSet();
+      commonStoreNames = commonStoreNames.intersection(currentStoreNames);
+    }
+    List<Storesitem> commonStores = [];
+    for (var storeName in commonStoreNames) {
+      var store =
+          initialStores.firstWhere((store) => store.storeName == storeName);
+      commonStores.add(store);
+    }
+    loadingCommonStore = false;
+    update();
+    return commonStores;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_user_github/page/profile_page/profile_footer.dart';
+import 'package:flutter_user_github/page/profile_page/profile_setup_page/manifest_social/manifest_social.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
@@ -93,7 +94,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           ],
                         ),
                       ),
-                      Container(
+                      GestureDetector(
+                        onTap: (){
+                          Get.to(ManifestSocial());
+                        },
+                        child: Container(
                         width: AppDimention.screenWidth,
                         height: AppDimention.size50,
                         padding: EdgeInsets.only(
@@ -115,6 +120,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                             )
                           ],
                         ),
+                      ),
                       ),
                       Container(
                         width: AppDimention.screenWidth,

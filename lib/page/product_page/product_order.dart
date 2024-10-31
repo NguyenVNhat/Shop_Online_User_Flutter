@@ -1,25 +1,24 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:flutter_user_github/caculator/function.dart';
-import 'package:flutter_user_github/data/controller/Product_controller.dart';
 import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
+import 'package:flutter_user_github/data/controller/Product_controller.dart';
 import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Dto/OrderProductDto.dart';
+import 'package:flutter_user_github/models/Model/UserPromotionModel.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
-import 'package:flutter_user_github/models/Model/PromotionModel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
-import 'package:flutter_user_github/theme/app_color.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_user_github/caculator/function.dart';
+import 'package:flutter_user_github/theme/app_color.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
+import 'package:get/get.dart';
+import 'dart:convert';
+import 'dart:async';
 
 class ProductOrder extends StatefulWidget {
   final int idproduct;
@@ -36,154 +35,225 @@ class ProductOrder extends StatefulWidget {
 }
 
 class _ProductOrderState extends State<ProductOrder> {
-  TextEditingController provinceController = TextEditingController();
-  TextEditingController DistrictController = TextEditingController();
-  TextEditingController HomenumberController = TextEditingController();
-  TextEditingController StreetController = TextEditingController();
-  TextEditingController noteController = TextEditingController();
-  TextEditingController searchRecommend = TextEditingController();
 
-  ProductController productController = Get.find<ProductController>();
-  PromotionController promotionController = Get.find<PromotionController>();
+  TextEditingController provinceController     = TextEditingController();
+  TextEditingController DistrictController     = TextEditingController();
+  TextEditingController HomenumberController   = TextEditingController();
+  TextEditingController StreetController       = TextEditingController();
+  TextEditingController noteController         = TextEditingController();
+  TextEditingController searchRecommend        = TextEditingController();
 
-  FunctionMap functionmap = FunctionMap();
-  List<String> listprovince = [];
-  Productitem? productitem;
-  String? size;
-  int? quantity;
-
-  Point? currentPoint;
-  bool? isLoadPoint = false;
-  Future<void> getCurrentPosition() async {
-    currentPoint = await functionmap.getCurrentLocation();
-    setState(() {
-      isLoadPoint = true;
-    });
-  }
+  ProductController     productController      = Get.find<ProductController>();
+  PromotionController   promotionController    = Get.find<PromotionController>();
+  UserController        userController         = Get.find<UserController>();
+  MapController         mapController          = MapController();
+  LatLng                tappedPoint            = LatLng(16.0471, 108.2068);
+  FunctionMap           functionmap            = FunctionMap();
+  
+  List<String>          listprovince = [];
+  String?               selectedVoucherStr;
+  String?               size;
+  String?               selectedProvince;
+  String?               selectedPayment;
+  String?               announce = "";
+  double                percentSelected = 0;
+  double?               longitude;
+  double?               latitude;
+  double                zoomValue = 14;
+  bool                  isChangePoint = false;
+  bool?                 isLoadPoint = false;
+  bool                  loadlocation = false;
+  int?                  selectedSize = 1;
+  int?                  quantity;
+  int?                  storeid;
+  Point?                currentPoint;
+  Productitem?          productitem;
 
   @override
   void initState() {
     super.initState();
     getCurrentPosition();
-    listprovince = functionmap.listProvinces();
-    productitem = productController.getproductbyid(widget.idproduct);
+    loadData();
+  }
+  // Load data of product selected to order
+  void loadData(){
     size = widget.size;
     quantity = widget.quantity;
+    listprovince = functionmap.listProvinces();
+    productitem = productController.getproductbyid(widget.idproduct);
   }
-
-  String? selectedProvince;
+  // Get current position of user
+  Future<void> getCurrentPosition() async {
+    currentPoint = await functionmap.getCurrentLocation();
+    setState(() {isLoadPoint = true;});
+  }
+  // Format price of product 
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (Match match) => '${match[1]}.',
-        );
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),(Match match) => '${match[1]}.',
+    );
   }
- double? longitude;
-  double? latitude;
+  // Select store of product
+  void onChanged(String? value, int id) {
+    promotionController.getUserPromotionWithStoreId(id);
+    setState(() 
+    {
+      storeid = id;
+    });
+  }
+  // Select payment method of order
+  List<String> paymentMethod = ["CASH", "MOMO", "ZALOPAY"];
+  void onChangedPayment(String? value) {
+    setState(() 
+    {
+      selectedPayment = value;
+    });
+  }
+  // Select voucher of product
+  void onChangedVoucher(double percentPromotion, String promotionCode) {
+    setState(() 
+    {
+      selectedVoucherStr = promotionCode;
+      percentSelected = percentPromotion;
+    });
+  }
+  // Get coordinate from address of user
   Future<bool> getCoordinatesFromAddress(String address) async {
     try {
       List<Location> locations = await locationFromAddress(address);
-      if (locations.isNotEmpty) {
-        setState(() {
+      if (locations.isNotEmpty) 
+      {
+        setState(() 
+        {
           latitude = locations.first.latitude;
           longitude = locations.first.longitude;
         });
-        print('Latitude: $latitude, Longitude: $longitude');
         return true;
       }
-    } catch (e) {
-      print('Error: $e');
+    } 
+    catch (e) 
+    { 
+      print('Error: $e'); 
     }
     return false;
   }
+  // Get address of user
   void _getaddress() {
-    User user = Get.find<UserController>().userprofile!;
+    User user = userController.userprofile!;
     setState(() {
       String address = user.address!;
       List<String> listaddress = address.split(",");
-      print(listaddress);
+      getCoordinatesFromAddress(address);
+      
       setState(() {
         HomenumberController.text = listaddress[0];
         StreetController.text = listaddress[1];
         DistrictController.text = listaddress[2];
         String provinceFromAddress = listaddress[3].trim().toLowerCase();
-        if (listprovince
-            .map((p) => p.toLowerCase().trim())
-            .contains(provinceFromAddress)) {
-          setState(() {
+        if (listprovince.map((p) => p.toLowerCase().trim()).contains(provinceFromAddress)) 
+        {
+          setState(() 
+          {
             selectedProvince = listaddress[3].trim();
           });
-        } else {
+        } 
+        else 
+        {
           print("Province not found in the list.");
         }
       });
     });
   }
-
-  //Select store
-  int? storeid;
-  void onChanged(String? value, int id) {
-    promotionController.getbystoreid(id!);
-    setState(() {
-      storeid = id;
-    });
-  }
-
-  // Select payment method
-  String? selectedPayment;
-  List<String> paymentMethod = ["CASH", "MOMO", "ZALOPAY"];
-  void onChangedPayment(String? value) {
-    setState(() {
-      selectedPayment = value;
-      print(selectedPayment);
-    });
-  }
-
-  // Select voucher
-  int? selectedVoucher;
-  void onChangedVoucher(int? value) {
-    setState(() {
-      selectedVoucher = value;
-    });
-  }
-
-  double zoomValue = 14;
-  MapController mapController = MapController();
-  LatLng tappedPoint = LatLng(16.0471, 108.2068);
-  bool loadlocation = false;
-  bool isChangePoint = false;
-
-  void _showDropdown() async {
-    if (selectedProvince == null ||
-        selectedProvince!.isEmpty ||
-        HomenumberController.text.isEmpty ||
-        StreetController.text.isEmpty ||
-        DistrictController.text.isEmpty) {
-      Point mypoint = await functionmap.getCurrentLocation() as Point;
+  // Order function 
+  void _order() async {
+    if (HomenumberController.text.isEmpty || DistrictController.text.isEmpty || StreetController.text.isEmpty ||
+        selectedProvince!.isEmpty || storeid == null || longitude == null || latitude == null || selectedPayment == null) {
       setState(() {
+        announce = "Vui lòng nhập đủ thông tin"; });
+    } else {
+      setState(() {announce = "";});
+      int     productid     = productitem!.productId!;
+      String  sizeOrder     = size!;
+      int     quantityOrder = quantity!;
+      int     storeId       = storeid!;
+      String  promotionCode = "";
+      String  address       = HomenumberController.text +
+                              " " +  StreetController.text +
+                              ", " + DistrictController.text +
+                              ", " + selectedProvince!;
+      if(selectedVoucherStr != null)
+      {
+        promotionCode = selectedVoucherStr!;
+      }   
+      if (isChangePoint) 
+      {
+        longitude = tappedPoint.longitude;
+        latitude = tappedPoint.latitude;
+      }
+
+      Orderproductdto dto = Orderproductdto(
+          productId: productid,
+          quantity: quantityOrder,
+          deliveryAddress: address,
+          paymentMethod: selectedPayment,
+          size: sizeOrder,
+          storeId: storeId,
+          latitude: latitude,
+          longitude: longitude);
+
+      await productController.order(dto);
+      while (productController.getloadingOrder) 
+      {
+        await Future.delayed(const Duration(microseconds: 100)); 
+      }
+      if (selectedPayment == "MOMO") 
+      {
+        var payUrl = productController.qrcode.payUrl;
+        final Uri _url = Uri.parse(payUrl!);
+        if (!await launchUrl(_url)) 
+        {
+          throw Exception('Could not launch $_url'); 
+        }
+      } 
+      else if (selectedPayment == "ZALOPAY") 
+      {
+        ZaloData zalo = productController.qrcodeZalo;
+        String payUrl = zalo.orderurl!;
+        if (await canLaunchUrl(Uri.parse(payUrl)))
+        {  
+          await launchUrl(Uri.parse(payUrl));
+        } 
+        else 
+        {
+          throw 'Could not launch $payUrl'; 
+        }
+      }
+    }
+  }
+  // Show dropdown of map
+  void _showDropdown() async {
+    if (selectedProvince == null || selectedProvince!.isEmpty || HomenumberController.text.isEmpty || StreetController.text.isEmpty || DistrictController.text.isEmpty) 
+    {
+      Point mypoint = await functionmap.getCurrentLocation() as Point;
+      setState(() 
+      {
         tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
         loadlocation = true;
         isChangePoint = true;
-        print(2);
       });
-    } else {
+    } 
+    else 
+    {
       Point addresspoint = await functionmap.getCoordinatesFromAddress(
-          HomenumberController.text +
-              " " +
-              StreetController.text +
-              ", " +
-              DistrictController.text +
-              ", " +
-              selectedProvince!) as Point;
-
-      setState(() {
+          HomenumberController.text + " " +StreetController.text + ", " +
+          DistrictController.text + ", " +selectedProvince!) as Point;
+      setState(() 
+      {
         tappedPoint = LatLng(addresspoint.latitude!, addresspoint.longtitude!);
         loadlocation = true;
         isChangePoint = true;
-        print(1);
       });
     }
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -197,6 +267,7 @@ class _ProductOrderState extends State<ProductOrder> {
                 return Stack(
                   children: [
                     loadlocation
+                      // Show map of user position
                         ? FlutterMap(
                             mapController: mapController,
                             options: MapOptions(
@@ -243,32 +314,8 @@ class _ProductOrderState extends State<ProductOrder> {
                             ],
                           )
                         : CircularProgressIndicator(),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: GestureDetector(
-                        onTap: () {
-                          mapController.move(tappedPoint, zoomValue);
-                        },
-                        child: Container(
-                          width: AppDimention.size40,
-                          height: AppDimention.size40,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius:
-                                  BorderRadius.circular(AppDimention.size5),
-                              border:
-                                  Border.all(width: 1, color: Colors.black26)),
-                          child: Center(
-                            child: Icon(
-                              Icons.my_location,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
+                      // Show tapped point 
+                      Positioned(
                         top: 10,
                         right: 10,
                         child: GestureDetector(
@@ -292,7 +339,8 @@ class _ProductOrderState extends State<ProductOrder> {
                             ),
                           ),
                         )),
-                    Positioned(
+                      // Zoom out map
+                      Positioned(
                         top: 10,
                         left: 10,
                         child: GestureDetector(
@@ -319,7 +367,8 @@ class _ProductOrderState extends State<ProductOrder> {
                             ),
                           ),
                         )),
-                    Positioned(
+                      // Zoom in map
+                      Positioned(
                         top: 10,
                         left: 60,
                         child: GestureDetector(
@@ -356,66 +405,13 @@ class _ProductOrderState extends State<ProductOrder> {
     );
   }
 
-  // Order
-  String? announce = "";
-  void _order() async {
-    if (HomenumberController.text.isEmpty ||
-        DistrictController.text.isEmpty ||
-        StreetController.text.isEmpty ||
-        selectedProvince!.isEmpty ||
-        storeid == null ||
-        selectedPayment == null) {
-      setState(() {
-        announce = "Vui lòng nhập đủ thông tin";
-      });
-    } else {
-      int productid = productitem!.productId!;
-      String sizeOrder = size!;
-      int quantityOrder = quantity!;
-      int storeId = storeid!;
-      String address = HomenumberController.text +
-          " " +
-          StreetController.text +
-          ", " +
-          DistrictController.text +
-          ", " +
-          selectedProvince!;
-
-      if(isChangePoint){
-        longitude = tappedPoint.longitude;
-        latitude = tappedPoint.latitude;
-      }
-      else{
-        getCoordinatesFromAddress(address);
-      }
-
-
-      Orderproductdto dto = Orderproductdto(
-          productId: productid,
-          quantity: quantityOrder,
-          deliveryAddress: address,
-          paymentMethod: selectedPayment,
-          size: sizeOrder,
-          storeId: storeId,
-          latitude: latitude,
-          longitude: longitude);
-      await productController.order(dto);
-      if (selectedPayment == "MOMO") {
-        var payUrl = productController.qrcode.payUrl;
-        final Uri _url = Uri.parse(payUrl!);
-        if (!await launchUrl(_url)) {
-          throw Exception('Could not launch $_url');
-        }
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
+          // Header of page
           Container(
             width: AppDimention.screenWidth,
             height: AppDimention.size70,
@@ -450,6 +446,7 @@ class _ProductOrderState extends State<ProductOrder> {
               ],
             ),
           ),
+          // Body of page
           Expanded(
               child: SingleChildScrollView(
             child: Column(
@@ -458,12 +455,12 @@ class _ProductOrderState extends State<ProductOrder> {
                 Container(
                   width: AppDimention.screenWidth,
                   margin: EdgeInsets.only(top: AppDimention.size20),
-                  padding: EdgeInsets.only(
-                      left: AppDimention.size10, right: AppDimention.size10),
+                  padding: EdgeInsets.only(left: AppDimention.size10, right: AppDimention.size10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Sản phẩm đã chọn"),
+                      // Product selected to order
                       Container(
                         width: AppDimention.screenWidth,
                         padding: EdgeInsets.only(top: AppDimention.size10),
@@ -477,8 +474,8 @@ class _ProductOrderState extends State<ProductOrder> {
                         child: Row(
                           children: [
                             Container(
-                              width: AppDimention.size100,
-                              height: AppDimention.size100,
+                              width:AppDimention.screenWidth * 0.25,
+                              height:AppDimention.screenWidth * 0.25,
                               margin:
                                   EdgeInsets.only(right: AppDimention.size20),
                               decoration: BoxDecoration(
@@ -503,17 +500,21 @@ class _ProductOrderState extends State<ProductOrder> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Container(
-                                    width: AppDimention.size100 * 2.3,
+                                    width: AppDimention.screenWidth * 0.55,
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(productitem!.productName!),
-                                        Text(
-                                            "đ${_formatNumber(productitem!.price!.toInt())}"),
+                                        
                                       ],
                                     ),
                                   ),
+                                  Text(
+                                          "đ${productitem!.discountedPrice!.toInt() != 0 ?
+                                          _formatNumber((((productitem!.discountedPrice!.toInt() + (selectedSize! - 1) * 10000) * quantity!) * (1 - percentSelected / 100)).toInt()) :
+                                          _formatNumber((((productitem!.price!.toInt() + (selectedSize! - 1) * 10000) * quantity!) * (1 - percentSelected / 100)).toInt())}",
+                                        ),
                                   SizedBox(
                                     height: AppDimention.size10,
                                   ),
@@ -528,6 +529,7 @@ class _ProductOrderState extends State<ProductOrder> {
                                           onTap: () {
                                             setState(() {
                                               size = item.name!;
+                                              selectedSize = item.id;
                                             });
                                           },
                                           child: Container(
@@ -550,7 +552,7 @@ class _ProductOrderState extends State<ProductOrder> {
                                     );
                                   }),
                                   Container(
-                                    width: AppDimention.size100 * 2.3,
+                                    width:  AppDimention.screenWidth * 0.55,
                                     padding: EdgeInsets.all(AppDimention.size5),
                                     margin: EdgeInsets.only(
                                         top: AppDimention.size10),
@@ -610,6 +612,7 @@ class _ProductOrderState extends State<ProductOrder> {
                     ],
                   ),
                 ),
+                // Get address of user field
                 Container(
                   width: AppDimention.screenWidth,
                   margin: EdgeInsets.only(top: AppDimention.size50),
@@ -845,6 +848,7 @@ class _ProductOrderState extends State<ProductOrder> {
                     Text("Cửa hàng"),
                   ],
                 ),
+                // Get store select field
                 Container(
                   width: AppDimention.screenWidth,
                   padding: EdgeInsets.all(AppDimention.size10),
@@ -1011,6 +1015,7 @@ class _ProductOrderState extends State<ProductOrder> {
                     Text("Phương thức thanh toán"),
                   ],
                 ),
+                // Get payment select field
                 Container(
                   width: AppDimention.screenWidth,
                   padding: EdgeInsets.all(AppDimention.size10),
@@ -1094,6 +1099,7 @@ class _ProductOrderState extends State<ProductOrder> {
                       Text("Mã giảm giá"),
                     ],
                   ),
+                // Get voucher select field
                 if (storeid != null)
                   GetBuilder<PromotionController>(builder: (controller) {
                     return controller.getloadingStoreId!
@@ -1112,13 +1118,12 @@ class _ProductOrderState extends State<ProductOrder> {
                                 padding: EdgeInsets.all(AppDimention.size10),
                                 decoration: BoxDecoration(),
                                 child: DropdownButtonFormField(
-                               
                                   hint: Text(
                                     "Chọn mã giảm giá",
                                     style: TextStyle(
                                         color: Colors.black26, fontSize: 12),
                                   ),
-                                  items: controller.getlistpromotionByStoreId
+                                  items: controller.getlistuserpromotion
                                       .map((item) {
                                     return DropdownMenuItem(
                                       value: item,
@@ -1127,8 +1132,6 @@ class _ProductOrderState extends State<ProductOrder> {
                                         margin: EdgeInsets.only(
                                             top: AppDimention.size10,
                                             bottom: AppDimention.size10),
-                                       
-                                        
                                         child: Column(
                                           children: [
                                             Container(
@@ -1161,7 +1164,7 @@ class _ProductOrderState extends State<ProductOrder> {
                                                                     .black12))),
                                                     child: Center(
                                                       child: Text(
-                                                        "${item.discountPercentage!.toInt()}%",
+                                                        "${item.percent!.toInt()}%",
                                                         style: TextStyle(
                                                             color:
                                                                 Colors.white),
@@ -1188,28 +1191,12 @@ class _ProductOrderState extends State<ProductOrder> {
                                                             child: Column(
                                                               children: [
                                                                 Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .end,
-                                                                  children: [
-                                                                    Text(
-                                                                      item.startDate !=
-                                                                              null
-                                                                          ? "${DateFormat('dd/MM/yyyy').format(DateTime.parse(item.startDate!))}"
-                                                                          : "",
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              Colors.white),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Row(
                                                                   children: [
                                                                     Container(
                                                                       width: AppDimention
                                                                           .size100,
                                                                       child: Text(
-                                                                          "${item.name}",
+                                                                          "${item.promotionCode}",
                                                                           maxLines:
                                                                               2,
                                                                           style: TextStyle(
@@ -1221,29 +1208,6 @@ class _ProductOrderState extends State<ProductOrder> {
                                                                 )
                                                               ],
                                                             )),
-                                                        Container(
-                                                            width: AppDimention
-                                                                    .size100 *
-                                                                2.5,
-                                                            height: AppDimention
-                                                                    .size130 *
-                                                                0.2,
-                                                            child: Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .end,
-                                                              children: [
-                                                                Text(
-                                                                  item.startDate !=
-                                                                          null
-                                                                      ? " ${DateFormat('dd/MM/yyyy').format(DateTime.parse(item.endDate!))}"
-                                                                      : "",
-                                                                  style: TextStyle(
-                                                                      color: Colors
-                                                                          .white),
-                                                                ),
-                                                              ],
-                                                            ))
                                                       ],
                                                     ),
                                                   )
@@ -1257,8 +1221,9 @@ class _ProductOrderState extends State<ProductOrder> {
                                   }).toList(),
                                   onChanged: (value) {
                                     var selectedVoucher =
-                                        value as PromotionData;
-                                    onChangedVoucher(selectedVoucher.id);
+                                        value as UserPromotionData;
+                                    onChangedVoucher(selectedVoucher.percent!,
+                                        selectedVoucher.promotionCode!);
                                   },
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
@@ -1287,12 +1252,13 @@ class _ProductOrderState extends State<ProductOrder> {
                                     ),
                                   ),
                                   selectedItemBuilder: (BuildContext context) {
-                                    return controller.listpromotion.map((item) {
+                                    return controller.listuserpromotion
+                                        .map((item) {
                                       return Container(
                                         alignment: Alignment.centerLeft,
                                         height: 60,
                                         width: AppDimention.size100 * 3,
-                                        child: Text(item.name!,
+                                        child: Text(item.promotionCode!,
                                             style: TextStyle(fontSize: 16)),
                                       );
                                     }).toList();
@@ -1308,6 +1274,7 @@ class _ProductOrderState extends State<ProductOrder> {
                     Text("Ghi chú"),
                   ],
                 ),
+                // Note order field
                 Container(
                   width: AppDimention.screenWidth,
                   margin: EdgeInsets.all(AppDimention.size10),
@@ -1344,6 +1311,7 @@ class _ProductOrderState extends State<ProductOrder> {
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
+                // Order button
                 Container(
                   width: AppDimention.screenWidth,
                   child: Center(

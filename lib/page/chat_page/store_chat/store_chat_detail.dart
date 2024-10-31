@@ -60,9 +60,9 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
         "Tôi muốn xem danh mục sản phẩm của cửa hàng bạn .",
         "Tôi muốn xem danh sách sản phẩm của cửa hàng .",
         "Tôi muốn xem danh sách các combo đang có .",
-        "Hãy hiển thị bản đồ đến cửa hàng của bạn .",
-        "Thời gian mà cửa hàng hoạt động trong ngày .",
-        "Xem chi tiết cửa hàng ."
+        // "Hãy hiển thị bản đồ đến cửa hàng của bạn .",
+        // "Thời gian mà cửa hàng hoạt động trong ngày .",
+        // "Xem chi tiết cửa hàng ."
       ],
     ]);
   }

@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
+import 'package:flutter_user_github/data/controller/Product_controller.dart';
 
 import 'package:flutter_user_github/models/Model/CartModel.dart';
+import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
@@ -18,10 +20,13 @@ class CartList extends StatefulWidget {
 
 class _CartListState extends State<CartList> {
   CartController cartController = Get.find<CartController>();
+  ProductController productController = Get.find<ProductController>();
   List<bool> isSelected = [];
   List<List<bool>> isProductSelected = [];
   List<int> storeSelected = [];
   List<int> cartSelected = [];
+  List<int> comboSelected = [];
+  // Format price of product
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
@@ -29,6 +34,7 @@ class _CartListState extends State<CartList> {
         );
   }
 
+  // Show dialog when delete cart item
   void _showDialogDelete(int cartId) {
     showDialog(
         context: context,
@@ -72,7 +78,7 @@ class _CartListState extends State<CartList> {
                                   cartController.deleteCart(cartId);
                                   cartController.getall();
                                   cartController.getListCartV2();
-                                  
+
                                   Navigator.pop(context);
                                 },
                                 child: Container(
@@ -97,6 +103,7 @@ class _CartListState extends State<CartList> {
         });
   }
 
+  // Show dialog when update cart item
   void _showDialogUpdate(CartData cartData) {
     ProductInCart? productInCart;
     ComboInCart? comboInCart;
@@ -213,7 +220,7 @@ class _CartListState extends State<CartList> {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                   Navigator.pop(context);
+                                  Navigator.pop(context);
                                 },
                                 child: Container(
                                   width: AppDimention.size100,
@@ -235,11 +242,12 @@ class _CartListState extends State<CartList> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  cartController.updateCart(cartData.cartId!,quantity);
+                                  cartController.updateCart(
+                                      cartData.cartId!, quantity);
                                   cartController.getall();
                                   cartController.getListCartV2();
-                                 
-                                   Navigator.pop(context);
+
+                                  Navigator.pop(context);
                                 },
                                 child: Container(
                                   width: AppDimention.size100,
@@ -251,8 +259,8 @@ class _CartListState extends State<CartList> {
                                           AppDimention.size5)),
                                   child: Center(
                                     child: Text("Đồng ý",
-                                        style:
-                                            TextStyle(color: Colors.green[100])),
+                                        style: TextStyle(
+                                            color: Colors.green[100])),
                                   ),
                                 ),
                               ),
@@ -263,20 +271,80 @@ class _CartListState extends State<CartList> {
         });
   }
 
+  // Show list water
+  void _showDialogWater(List<int> listwater) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimention.size10),
+              ),
+              child: StatefulBuilder(
+                  builder: (BuildContext context, StateSetter setState) {
+                return Container(
+                  width: AppDimention.screenWidth,
+                  height: AppDimention.size100 * 2.5,
+                  padding: EdgeInsets.all(AppDimention.size10),
+                  child: Column(
+                    children: listwater.map((item) {
+                      Productitem? productitem =
+                          productController.getproductbyid(item);
+                      return Container(
+                          width: AppDimention.screenWidth,
+                          height: AppDimention.size100,
+                          padding: EdgeInsets.all(AppDimention.size10),
+                          margin: EdgeInsets.only(bottom: AppDimention.size10),
+                          decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
+                              image: DecorationImage(
+                                  image: MemoryImage(
+                                      base64Decode(productitem!.image!)),
+                                  fit: BoxFit.cover)),
+                          child: Container(
+                            width: AppDimention.screenWidth,
+                            height: AppDimention.size100,
+                            padding: EdgeInsets.all(AppDimention.size10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "${productitem.productName!}",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  "đ${_formatNumber(productitem.discountedPrice != null ? productitem.discountedPrice!.toInt() : productitem.price!.toInt())}",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ));
+                    }).toList(),
+                  ),
+                );
+              }));
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<CartController>(builder: (cartController) {
       if (isSelected.length != cartController.listcart.length) {
         isSelected = List<bool>.filled(cartController.listcart.length, false);
       }
-
       if (isProductSelected.length != cartController.listcart.length) {
         isProductSelected = List.generate(
             cartController.listcart.length,
             (index) => List<bool>.filled(
                 cartController.listcart[index].cartdata!.length, false));
       }
-
       if (cartController.listcart.isEmpty) {
         return Container(
           width: AppDimention.screenWidth,
@@ -309,6 +377,7 @@ class _CartListState extends State<CartList> {
                       width: AppDimention.screenWidth,
                       child: Column(
                         children: [
+                          // Header of cart box
                           Container(
                             width: AppDimention.screenWidth,
                             decoration:
@@ -320,80 +389,65 @@ class _CartListState extends State<CartList> {
                                   onChanged: (bool? value) {
                                     setState(() {
                                       isSelected[index] = value!;
-
                                       if (value) {
-                                        storeSelected.add(cartController
-                                            .listcart[index]
-                                            .storeitem!
-                                            .storeId!);
-
-                                        for (int i = 0;
-                                            i <
-                                                cartController.listcart[index]
-                                                    .cartdata!.length;
-                                            i++) {
+                                        storeSelected.add(cartController.listcart[index].storeitem!.storeId!);
+                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length;i++) {
                                           isProductSelected[index][i] = true;
-                                          if (cartController.listcart[index]
-                                                  .cartdata![i].type ==
-                                              "product") {
-                                            cartSelected.add(cartController
-                                                .listcart[index]
-                                                .cartdata![i]
-                                                .product!
-                                                .productId!);
+                                          if (cartController.listcart[index].cartdata![i].type =="product") {
+                                            ProductInCart? productInCart = cartController.listcart[index].cartdata![i].product;
+                                            if(!cartSelected.contains(productInCart!.productId!))
+                                            {                                       
+                                              cartController.updateTotal(productInCart.unitPrice!.toInt() * productInCart.quantity!.toInt(), true);
+                                              cartSelected.add(productInCart.productId!);
+                                            }
                                           } else {
-                                            cartSelected.add(cartController
-                                                .listcart[index]
-                                                .cartdata![i]
-                                                .combo!
-                                                .comboId!);
+                                            ComboInCart? comboincart =  cartController.listcart[index].cartdata![i].combo;
+                                            if(!comboSelected.contains(comboincart!.comboId!))
+                                            {
+                                                cartController.updateTotal(comboincart.unitPrice!.toInt() * comboincart.quantity!.toInt(), true);
+                                                 if(comboincart.drinkId!.length != 0)
+                                                    {
+                                                      for(int iddrink in comboincart.drinkId!){
+                                                        Productitem? drink = productController.getproductbyid(iddrink);
+                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),true);
+                                                      }
+                                                    }
+                                                comboSelected.add(comboincart.comboId!);
+                                            }
                                           }
-                                          cartController.updateIDSelectedItem(
-                                              cartController.listcart[index]
-                                                  .cartdata![i].cartId!,
-                                              true);
+                                          cartController.updateIDSelectedItem(cartController.listcart[index].cartdata![i].cartId!,true);
                                         }
-                                        cartController.updateIDSelectedStore(
-                                            cartController.listcart[index]
-                                                .storeitem!.storeId!,
-                                            true);
+                                        cartController.updateIDSelectedStore(cartController.listcart[index].storeitem!.storeId!,true);
                                       } else {
-                                        storeSelected.remove(cartController
-                                            .listcart[index]
-                                            .storeitem!
-                                            .storeId!);
-
-                                        for (int i = 0;
-                                            i <
-                                                cartController.listcart[index]
-                                                    .cartdata!.length;
-                                            i++) {
+                                        storeSelected.remove(cartController.listcart[index].storeitem!.storeId!);
+                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length;i++) {
                                           isProductSelected[index][i] = false;
-
-                                          if (cartController.listcart[index]
-                                                  .cartdata![i].type ==
-                                              "product") {
-                                            cartSelected.remove(cartController
-                                                .listcart[index]
-                                                .cartdata![i]
-                                                .product!
-                                                .productId!);
-                                          } else {
-                                            cartSelected.remove(cartController
-                                                .listcart[index]
-                                                .cartdata![i]
-                                                .combo!
-                                                .comboId!);
+                                          if (cartController.listcart[index].cartdata![i].type =="product") {
+                                            ProductInCart? productInCart = cartController.listcart[index].cartdata![i].product;
+                                            if(cartSelected.contains(productInCart!.productId!)) 
+                                            {             
+                                              cartController.updateTotal(productInCart.unitPrice!.toInt() * productInCart.quantity!.toInt(), false);
+                                              cartSelected.remove(productInCart.productId!);
+                                            }
+                                          } 
+                                          else {
+                                            ComboInCart? comboincart =  cartController.listcart[index].cartdata![i].combo;
+                                            if(comboSelected.contains(comboincart!.comboId!))
+                                            {
+                                                cartController.updateTotal(comboincart.unitPrice!.toInt() * comboincart.quantity!.toInt(), false);
+                                                if(comboincart.drinkId!.length != 0)
+                                                    {
+                                                      for(int iddrink in comboincart.drinkId!){
+                                                        Productitem? drink = productController.getproductbyid(iddrink);
+                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),false);
+                                                      }
+                                                    }
+                                                comboSelected.remove(comboincart.comboId!);
+                                            }
                                           }
-                                          cartController.updateIDSelectedItem(
-                                              cartController.listcart[index]
-                                                  .cartdata![i].cartId!,
-                                              false);
+                                          cartController.updateIDSelectedItem(cartController.listcart[index].cartdata![i].cartId!,false);
                                         }
-                                        cartController.updateIDSelectedStore(
-                                            cartController.listcart[index]
-                                                .storeitem!.storeId!,
-                                            false);
+                                        cartController.updateIDSelectedStore(cartController.listcart[index].storeitem!.storeId!,false);
                                       }
                                     });
                                   },
@@ -401,8 +455,7 @@ class _CartListState extends State<CartList> {
                                 Container(
                                   width: AppDimention.size100 * 3,
                                   child: Text(
-                                    cartController
-                                        .listcart[index].storeitem!.storeName!,
+                                    cartController.listcart[index].storeitem!.storeName!,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white),
                                   ),
@@ -410,14 +463,12 @@ class _CartListState extends State<CartList> {
                               ],
                             ),
                           ),
+                          // Product infomation
                           Container(
                             width: AppDimention.screenWidth,
                             decoration: BoxDecoration(color: Colors.grey[200]),
                             child: Column(
-                              children: cartController.listcart[index].cartdata!
-                                  .asMap()
-                                  .entries
-                                  .map((entry) {
+                              children: cartController.listcart[index].cartdata!.asMap().entries.map((entry) {
                                 int itemIndex = entry.key;
                                 var item = entry.value;
                                 ProductInCart? productInCart;
@@ -443,39 +494,51 @@ class _CartListState extends State<CartList> {
                                       child: Row(
                                         children: [
                                           Checkbox(
-                                            value: isProductSelected[index]
-                                                [itemIndex],
+                                            value: isProductSelected[index][itemIndex],
                                             onChanged: (bool? value) {
                                               setState(() {
-                                                isProductSelected[index]
-                                                    [itemIndex] = value!;
+                                                isProductSelected[index][itemIndex] = value!;
                                                 if (value) {
-                                                  cartSelected.add(key!
-                                                      ? productInCart!
-                                                          .productId!
-                                                      : comboInCart!.comboId!);
-                                                  cartController
-                                                      .updateIDSelectedItem(
-                                                          item.cartId!, true);
+                                                  if (key!) {
+                                                    cartSelected.add(productInCart!.productId!);
+                                                    cartController.updateTotal(productInCart.unitPrice!.toInt() * quantity,true);
+                                                    cartController.updateIDSelectedItem(item.cartId!, true);
+                                                  } else {
+                                                    comboSelected.add(comboInCart!.comboId!);
+                                                    cartController.updateTotal(comboInCart.unitPrice!.toInt() * quantity,true);
+                                                    if(comboInCart.drinkId!.length != 0)
+                                                    {
+                                                      for(int iddrink in comboInCart.drinkId!){
+                                                        Productitem? drink = productController.getproductbyid(iddrink);
+                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),true);
+                                                      }
+                                                    }
+                                                    cartController.updateIDSelectedCombo(item.cartId!, true);
+                                                  }
                                                 } else {
-                                                  cartSelected.remove(key!
-                                                      ? productInCart!
-                                                          .productId!
-                                                      : comboInCart!.comboId!);
-                                                  cartController
-                                                      .updateIDSelectedItem(
-                                                          item.cartId!, false);
+                                                  if (key!) {
+                                                    cartSelected.remove(productInCart!.productId!);
+                                                    cartController.updateTotal(productInCart.unitPrice!.toInt() * quantity,false);
+                                                    cartController.updateIDSelectedItem(item.cartId!,false);
+                                                  } else {
+                                                    comboSelected.remove(comboInCart!.comboId!);
+                                                    cartController.updateTotal(comboInCart.unitPrice!.toInt() * quantity,false);
+                                                    if(comboInCart.drinkId!.length != 0)
+                                                    {
+                                                      for(int iddrink in comboInCart.drinkId!){
+                                                        Productitem? drink = productController.getproductbyid(iddrink);
+                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),false);
+                                                      }
+                                                    }
+                                                    cartController.updateIDSelectedCombo(item.cartId!,false);
+                                                  }
                                                 }
                                               });
                                             },
                                           ),
                                           GestureDetector(
                                             onTap: () {
-                                              Get.toNamed(key!
-                                                  ? AppRoute.get_product_detail(
-                                                      productInCart!.productId!)
-                                                  : AppRoute.get_combo_detail(
-                                                      comboInCart!.comboId!));
+                                              Get.toNamed(key! ? AppRoute.get_product_detail( productInCart!.productId!) : AppRoute.get_combo_detail(comboInCart!.comboId!));
                                             },
                                             child: Container(
                                               width: AppDimention.size60,
@@ -490,26 +553,20 @@ class _CartListState extends State<CartList> {
                                                   image: DecorationImage(
                                                       fit: BoxFit.cover,
                                                       image: MemoryImage(
-                                                          base64Decode(key
-                                                              ? productInCart!
-                                                                  .image!
-                                                              : comboInCart!
-                                                                  .image!)))),
+                                                          base64Decode(key? productInCart!.image! : comboInCart!.image!)))),
                                             ),
                                           ),
                                           SizedBox(
                                             width: AppDimention.size20,
                                           ),
                                           Container(
-                                            width: AppDimention.size100 * 2.2,
+                                            width:
+                                                AppDimention.screenWidth * 0.55,
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(key
-                                                    ? productInCart!
-                                                        .productName!
-                                                    : comboInCart!.comboName!),
+                                                Text(key ? productInCart!.productName!: comboInCart!.comboName!),
                                                 Text(
                                                     "Size : ${key ? productInCart!.size! : comboInCart!.size!}"),
                                                 Row(
@@ -596,7 +653,7 @@ class _CartListState extends State<CartList> {
                                                       ],
                                                     )
                                                   ],
-                                                )
+                                                ),
                                               ],
                                             ),
                                           )
@@ -614,6 +671,29 @@ class _CartListState extends State<CartList> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.end,
                                         children: [
+                                          if (!key)
+                                            GestureDetector(
+                                              onTap: () {
+                                                _showDialogWater(
+                                                    comboInCart!.drinkId!);
+                                              },
+                                              child: Container(
+                                                width: AppDimention.size100,
+                                                height: AppDimention.size25,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          AppDimention.size5),
+                                                ),
+                                                child: Center(
+                                                  child: Text("Nước uống"),
+                                                ),
+                                              ),
+                                            ),
+                                          SizedBox(
+                                            width: AppDimention.size10,
+                                          ),
                                           GestureDetector(
                                             onTap: () {
                                               _showDialogUpdate(item);

@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter_user_github/data/controller/Category_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
+import 'package:flutter_user_github/models/Model/PromotionModel.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
@@ -23,6 +25,11 @@ class StoreDetailPage extends StatefulWidget {
 }
 
 class _StoreDetailPageState extends State<StoreDetailPage> {
+  PromotionController promotionController = Get.find<PromotionController>();
+  CategoryController categoryController = Get.find<CategoryController>();
+  Storecontroller storecontroller = Get.find<Storecontroller>();
+  ProductController productController = Get.find<ProductController>();
+  List<PromotionData> listpromotion = [];
   bool _isLoad = true;
   int? categorySelected;
   Storesitem? storesitem;
@@ -40,16 +47,17 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
   }
 
   Future<void> _loadData() async {
-    await Get.find<CategoryController>().getbystoreid(widget.storeId);
-    await Get.find<Storecontroller>().getbyid(widget.storeId);
+    await promotionController.getbystoreid(widget.storeId);
+    await categoryController.getbystoreid(widget.storeId);
+    await storecontroller.getbyid(widget.storeId);
     setState(() {
+      listpromotion = promotionController.listpromotionByStoreId;
       _isLoad = false;
     });
   }
 
   void _loadProduct(int storeid, int categoryId) async {
-    await Get.find<ProductController>()
-        .getProductByStoreCategoryId(storeid, categoryId);
+    await productController.getProductByStoreCategoryId(storeid, categoryId);
   }
 
   String formatTime(String isoDateTime) {
@@ -59,14 +67,12 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
 
   void _loadInfomation() {
     if (!_isLoad) {
-      categorySelected =
-          Get.find<CategoryController>().categoryListStoreId[0].categoryId;
-      title =
-          Get.find<CategoryController>().categoryListStoreId[0].categoryName;
-      storesitem = Get.find<Storecontroller>().storeItem!;
+      categorySelected = categoryController.categoryListStoreId[0].categoryId;
+      title = categoryController.categoryListStoreId[0].categoryName;
+      storesitem = storecontroller.storeItem!;
 
       _loadProduct(storesitem!.storeId!,
-          Get.find<CategoryController>().categoryListStoreId[0].categoryId!);
+          categoryController.categoryListStoreId[0].categoryId!);
     }
   }
 
@@ -304,9 +310,76 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                 )
                               ],
                             ),
-                            SizedBox(
-                              height: AppDimention.size15,
-                            ),
+                            if (listpromotion.length != 0)
+                              Column(
+                                children: [
+                                  
+                                  Container(
+                                    width: AppDimention.screenWidth,
+                                    height: AppDimention.size60,
+                                    decoration: BoxDecoration(
+                                        color: Colors.black12,
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                width: 1,
+                                                color: Colors.grey[200]!),
+                                            top: BorderSide(
+                                                width: 1,
+                                                color: Colors.grey[200]!))),
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: EdgeInsets.only(right: AppDimention.size10),
+                                      child: Row(
+                                        children: listpromotion
+                                            .map((item) => Container(
+                                                  width: AppDimention.size100 *
+                                                      2.5,
+                                                  height: AppDimention.size40,
+                                                  padding: EdgeInsets.only(
+                                                      left: AppDimention.size10,
+                                                      right:
+                                                          AppDimention.size10),
+                                                  margin: EdgeInsets.only(
+                                                      left:
+                                                          AppDimention.size10),
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Text(
+                                                              "${item.discountPercentage!.toInt()}%"),
+                                                          SizedBox(
+                                                            width: AppDimention
+                                                                .size10,
+                                                          ),
+                                                          Text("${item.name}")
+                                                        ],
+                                                      ),
+                                                      promotionController.checkPromotion(item.name!) ?
+                                                      GestureDetector(
+                                                        onTap: () {},
+                                                        child: Text("Lưu"),
+                                                      ):
+                                                      GestureDetector(
+                                                        onTap: () {},
+                                                        child: Text("Sở hữu"),
+                                                      )
+
+                                                    ],
+                                                  ),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                           
                             Container(
                               width: AppDimention.screenWidth,
                               height: AppDimention.size60,
@@ -321,7 +394,7 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: Row(
-                                  children: Get.find<CategoryController>()
+                                  children: categoryController
                                       .categoryListStoreId
                                       .map((item) => Row(
                                             children: [
@@ -373,9 +446,6 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                       .toList(),
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                              height: AppDimention.size20,
                             ),
                             Container(
                               width: AppDimention.screenWidth,

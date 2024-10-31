@@ -20,7 +20,8 @@ class _CartFooterState extends State<CartFooter> {
   CartController cartController = Get.find<CartController>();
   void checkItem() {
     if (cartController.IDSelectedItem.isEmpty &&
-        cartController.IDSelectedStore.isEmpty) {
+        cartController.IDSelectedStore.isEmpty &&
+        cartController.IDSelectedCombo.isEmpty ) {
       Get.snackbar(
         "Thông báo",
         "Vui lòng chọn sản phẩm",

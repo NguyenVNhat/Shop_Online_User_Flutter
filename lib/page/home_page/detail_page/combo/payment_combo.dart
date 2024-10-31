@@ -10,6 +10,7 @@ import 'package:flutter_user_github/models/Model/Item/ComboItem.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -23,7 +24,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class PaymentCombo extends StatefulWidget {
   final int idcombo;
-  final int iddrink;
+  final List<int> iddrink;
   const PaymentCombo({
     required this.idcombo,
     required this.iddrink,
@@ -43,7 +44,7 @@ class _PaymentComboState extends State<PaymentCombo> {
   ProductController productController = Get.find<ProductController>();
   FunctionMap functionmap = FunctionMap();
   Comboitem? comboitem;
-  Productitem? productitem;
+  List<Productitem> productitem = [];
   int? selectSize = 1;
   Point? currentPoint;
   bool? isLoadPoint = false;
@@ -71,9 +72,6 @@ class _PaymentComboState extends State<PaymentCombo> {
     return DateFormat('hh:mm').format(dateTime);
   }
 
-
-  
-
   Future<void> getCurrentPosition() async {
     currentPoint = await functionmap.getCurrentLocation();
     setState(() {
@@ -83,7 +81,9 @@ class _PaymentComboState extends State<PaymentCombo> {
 
   void loadingData() async {
     if (widget.iddrink != 0) {
-      productitem = productController.getproductbyid(widget.iddrink);
+      for(int id in widget.iddrink){
+      productitem!.add(productController.getproductbyid(id)!);
+      }
       haveDrink = true;
     }
     comboitem = combocontroller.getcombobyId(widget.idcombo);
@@ -162,8 +162,9 @@ class _PaymentComboState extends State<PaymentCombo> {
     User user = Get.find<UserController>().userprofile!;
     setState(() {
       String address = user.address!;
+      getCoordinatesFromAddress(address);
       List<String> listaddress = address.split(",");
-      print(listaddress);
+      
 
       setState(() {
         HomenumberController.text = listaddress[0];
@@ -440,9 +441,10 @@ class _PaymentComboState extends State<PaymentCombo> {
       });
     } else {
       int idcombo = comboitem!.comboId!;
-      int? drinkid = 0;
-      if(productitem != null){
-        drinkid = productitem!.productId!;
+      List<int> drinkid = [];
+      if(productitem.length != 0){
+        for(Productitem item in productitem)
+        drinkid.add( item.productId! );
       }
       
 
@@ -465,22 +467,21 @@ class _PaymentComboState extends State<PaymentCombo> {
         longitude = tappedPoint.longitude;
         latitude = tappedPoint.latitude;
       }
-      else{
-        getCoordinatesFromAddress(address);
-      }
+    
       Ordercombodto dto;
-      if(productitem != null)
-      
+      if(productitem.length != 0)
+      {
        dto = Ordercombodto(
           paymentMethod: paymentMethod,
           comboId: idcombo,
-          drinkIds: [drinkid],
+          drinkIds: widget.iddrink,
           storeId: storeId,
           quantity: quantity,
           size: sizename,
           deliveryAddress: address,
           latitude: latitude,
           longitude: longitude);
+      }
       else{
          dto = Ordercombodto(
           paymentMethod: paymentMethod,
@@ -494,12 +495,24 @@ class _PaymentComboState extends State<PaymentCombo> {
           longitude: longitude);
       }
       await combocontroller.order(dto);
+      while(combocontroller.getordering){
+        await Future.delayed(const Duration(microseconds: 100));
+      }
       if (paymentMethod == "MOMO") {
         var payUrl = combocontroller.qrcode.payUrl;
       final Uri _url = Uri.parse(payUrl!);
       if (!await launchUrl(_url)) {
         throw Exception('Could not launch $_url');
       }
+      }
+      else if(selectedPayment == "ZALOPAY"){
+         ZaloData zalo = combocontroller.qrcodeZalo;
+            String payUrl = zalo.orderurl!;
+            if (await canLaunchUrl(Uri.parse(payUrl))) {
+            await launchUrl(Uri.parse(payUrl));
+          } else {
+            throw 'Could not launch $payUrl';
+          }
       }
     }
   }
@@ -667,7 +680,8 @@ class _PaymentComboState extends State<PaymentCombo> {
                       children: [
                         Text("Nước uống đã chọn"),
                         isload!
-                            ? Container(
+                            ? Column(
+                              children: productitem.map((item)=>Container(
                                 width: AppDimention.screenWidth,
                                 padding:
                                     EdgeInsets.only(top: AppDimention.size10),
@@ -698,7 +712,7 @@ class _PaymentComboState extends State<PaymentCombo> {
                                           image: DecorationImage(
                                               fit: BoxFit.cover,
                                               image: MemoryImage(base64Decode(
-                                                  productitem!.image!)))),
+                                                  item.image!)))),
                                     ),
                                     Container(
                                       padding:
@@ -727,8 +741,8 @@ class _PaymentComboState extends State<PaymentCombo> {
                                                   MainAxisAlignment
                                                       .spaceBetween,
                                               children: [
-                                                Text(productitem!.productName!),
-                                                Text(productitem!.price!
+                                                Text(item.productName!),
+                                                Text(item.price!
                                                         .toInt()
                                                         .toString() +
                                                     " vnđ"),
@@ -757,7 +771,7 @@ class _PaymentComboState extends State<PaymentCombo> {
                                                               )),
                                                     ),
                                                     Text(
-                                                        "( ${productitem!.averageRate} )")
+                                                        "( ${item.averageRate} )")
                                                   ],
                                                 ),
                                                 SizedBox(
@@ -812,7 +826,8 @@ class _PaymentComboState extends State<PaymentCombo> {
                                     )
                                   ],
                                 ),
-                              )
+                              )).toList(),
+                            )
                             : CircularProgressIndicator()
                       ],
                     ),

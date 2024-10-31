@@ -26,6 +26,7 @@ class OrderController extends GetxController {
     } else {
       print("Lỗi không lấy được danh sách đơn hàng: " +
           response.statusCode.toString());
+      print(response.body);
       _orderlist = [];
     }
     _isLoading = false;

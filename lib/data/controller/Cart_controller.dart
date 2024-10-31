@@ -6,6 +6,7 @@ import 'package:flutter_user_github/models/Model/CartModel.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/NewCartModel.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -24,6 +25,9 @@ class CartController extends GetxController implements GetxService {
   MomoModels _qrcode = MomoModels();
   MomoModels get qrcode => _qrcode;
 
+  ZaloData _qrcodeZalo = ZaloData();
+  ZaloData get qrcodeZalo => _qrcodeZalo;
+
   // * danh sách sản phẩm trong giỏ hàng
   List<CartData> _cartlist = [];
   List<CartData> get cartlist => _cartlist;
@@ -31,7 +35,6 @@ class CartController extends GetxController implements GetxService {
   // * tổng giá của giỏ hàng
   int _totalprice = 0;
   int get totalprice => _totalprice;
-  
 
   // * danh sách các sản phẩm được chọn để thanh toán
   List<int> _IDSelectedItem = [];
@@ -45,7 +48,7 @@ class CartController extends GetxController implements GetxService {
   List<int> _IDSelectedCombo = [];
   List<int> get IDSelectedCombo => _IDSelectedCombo;
 
-  // *  danh sách các cửa hàng 
+  // *  danh sách các cửa hàng
   List<int> listIDStore = [];
   List<int> get getlistIDStore => listIDStore;
 
@@ -53,7 +56,7 @@ class CartController extends GetxController implements GetxService {
   List<ProductInCart> listCartWithStoreId = [];
   List<ProductInCart> get getlistCartWithStoreId => listCartWithStoreId;
 
-  // * danh sách các sản phẩm 
+  // * danh sách các sản phẩm
   List<Newcartmodel> listcart = [];
   List<Newcartmodel> get getlistcart => listcart;
 
@@ -61,16 +64,14 @@ class CartController extends GetxController implements GetxService {
   List<Newcartmodel> listcartinorder = [];
   List<Newcartmodel> get getlistcartinorder => listcartinorder;
 
-  // * Controller 
+  // * Controller
   Storecontroller storecontroller = Get.find<Storecontroller>();
   // Hết khai báo biến ------------------------------------------------------------------------
-
 
   // **************************************************************************** Khai báo hàm
 
   // * Hàm lấy danh sách sản phẩm trong giỏ hàng
   Future<void> getall() async {
-
     _isLoading = true;
     Response response = await cartRepo.getall();
 
@@ -81,11 +82,7 @@ class CartController extends GetxController implements GetxService {
       if (cartData != null) {
         _cartlist.addAll(cartData);
       }
-      _totalprice = _cartlist
-          .where((item) => item.product != null)
-          .map((item) => item.product!.totalPrice ?? 0.0)
-          .fold(0, (previous, current) => previous.toInt() + current.toInt());
-      _totalprice = _totalprice.toInt();
+    
     } else {
       _cartlist = [];
       _totalprice = 0;
@@ -94,17 +91,19 @@ class CartController extends GetxController implements GetxService {
     _isLoading = false;
     update();
   }
+
   bool? ordering = false;
   bool? get getordering => ordering;
 
   // * Hàm thanh toán đơn hàng
-  Future<void> orderall(String address, String paymentMethod,double latitude,double longitude) async {
+  Future<void> orderall(String address, String paymentMethod, double latitude,
+      double longitude) async {
     ordering = true;
-    // * Thanh toán các đơn nằm được chọn 
+    // * Thanh toán các đơn nằm được chọn
     if (!listcartinorder.isEmpty) {
       List<int> listIdCartItem = [];
-      for(Newcartmodel cartmodel in listcartinorder){
-        for(CartData cart in cartmodel.cartdata!){
+      for (Newcartmodel cartmodel in listcartinorder) {
+        for (CartData cart in cartmodel.cartdata!) {
           listIdCartItem.add(cart.cartId!);
         }
       }
@@ -116,8 +115,9 @@ class CartController extends GetxController implements GetxService {
           latitude: latitude,
           longitude: longitude));
       if (response.statusCode == 200) {
+        var data = response.body;
         if (paymentMethod == "CASH") {
-           Get.snackbar(
+          Get.snackbar(
             "Thông báo",
             "Đặt đơn hàng thành công",
             snackPosition: SnackPosition.TOP,
@@ -128,21 +128,22 @@ class CartController extends GetxController implements GetxService {
             margin: EdgeInsets.all(10),
             duration: Duration(seconds: 1),
             isDismissible: true,
-            
           );
-          Get.find<UserController>().addannouce("Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !"); 
+          Get.find<UserController>().addannouce(
+              "Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !");
           await getListCartV2();
-        } else {
-          var data = response.body;
+        } else if (paymentMethod == "MOMO") {
           _qrcode = (MomoModels.fromJson(data).momo);
-          print( "PAYURRL ${_qrcode.payUrl}");
+          print("PAYURRL ${_qrcode.payUrl}");
+        } else {
+          _qrcodeZalo = ZaloModels.fromJson(data).getzalodata!;
         }
       } else {
-        print("Đặt đơn hàng sản phẩm thất bại : " +response.statusCode.toString());
+        print("Đặt đơn hàng sản phẩm thất bại : " +
+            response.statusCode.toString());
       }
-    }
-     else {
-       Get.snackbar(
+    } else {
+      Get.snackbar(
         "Thông báo",
         "Vui lòng chọn sản phẩm đặt đơn",
         snackPosition: SnackPosition.TOP,
@@ -153,7 +154,6 @@ class CartController extends GetxController implements GetxService {
         margin: EdgeInsets.all(10),
         duration: Duration(seconds: 1),
         isDismissible: true,
-        
       );
     }
     ordering = false;
@@ -161,8 +161,11 @@ class CartController extends GetxController implements GetxService {
   }
 
   // * Hàm cập nhật tổng tiền giỏ hàng
-  void updateTotal(int newtotal) {
-    this._totalprice = newtotal.toInt();
+  void updateTotal(int newtotal,bool key) {
+    if(key)
+      _totalprice = _totalprice +  newtotal.toInt();
+    else
+      _totalprice = _totalprice -  newtotal.toInt();
     update();
   }
 
@@ -193,50 +196,56 @@ class CartController extends GetxController implements GetxService {
     }
     update();
   }
-  Future<void> deleteCart(int cartId) async{
-    Response response = await cartRepo.deleteCart(cartId);
-    if(response.statusCode == 200){
-      Get.snackbar(
-            "Thông báo",
-            "Xóa  giỏ hàng thành công",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.white,
-            colorText: Colors.black,
-            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
-            borderRadius: 10,
-            margin: EdgeInsets.all(10),
-            duration: Duration(seconds: 1),
-            isDismissible: true,
-            
-          );
+
+  // * Hàm cập nhật các combo được chọn
+  void updateIDSelectedCombo(int id, bool value) {
+    if (value) {
+      _IDSelectedCombo.add(id);
+    } else {
+      _IDSelectedCombo.remove(id);
     }
-    else{
+    update();
+  }
+
+  Future<void> deleteCart(int cartId) async {
+    Response response = await cartRepo.deleteCart(cartId);
+    if (response.statusCode == 200) {
+      Get.snackbar(
+        "Thông báo",
+        "Xóa  giỏ hàng thành công",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+      );
+    } else {
       print("Xóa giỏ hàng thất bại ${response.body["message"]}");
     }
   }
-  Future<void> updateCart(int cartId,int quantity) async{
-    Response response = await cartRepo.updateCart(cartId,quantity);
-    if(response.statusCode == 200){
+
+  Future<void> updateCart(int cartId, int quantity) async {
+    Response response = await cartRepo.updateCart(cartId, quantity);
+    if (response.statusCode == 200) {
       Get.snackbar(
-            "Thông báo",
-            "Cập nhật giỏ hàng thành công",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.white,
-            colorText: Colors.black,
-            icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
-            borderRadius: 10,
-            margin: EdgeInsets.all(10),
-            duration: Duration(seconds: 1),
-            isDismissible: true,
-            
-          );
-    }
-    else{
+        "Thông báo",
+        "Cập nhật giỏ hàng thành công",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+      );
+    } else {
       print("Cập nhật giỏ hàng thất bại ${response.body["message"]}");
     }
   }
-
- 
 
   bool checkInList(int storeId, List<int> listId) {
     for (int item in listId) {
@@ -247,24 +256,24 @@ class CartController extends GetxController implements GetxService {
     return true;
   }
 
-  
   // * Hàm lấy ra các cửa hàng của sản phẩm
   void getDistinctStoreId() async {
     _cartlist.forEach((item) {
-      if(item.type == "product"){
+      if (item.type == "product") {
         if (checkInList(item.product!.storeId!, listIDStore)) {
           listIDStore.add(item.product!.storeId!);
-        };
-      }
-      else{
+        }
+        ;
+      } else {
         if (checkInList(item.combo!.storeId!, listIDStore)) {
           listIDStore.add(item.combo!.storeId!);
-        };
+        }
+        ;
       }
     });
   }
 
-  // * Hàm lấy ra các sản phẩm của cửa hàng 
+  // * Hàm lấy ra các sản phẩm của cửa hàng
   void getCartWithStoreId(int storeId) {
     _cartlist.forEach((item) {
       if (item.product!.storeId == storeId) {
@@ -352,12 +361,10 @@ class CartController extends GetxController implements GetxService {
     }
 
     if (_IDSelectedItem.isNotEmpty) {
-      print("Product ${_IDSelectedItem}");
-      for (int productId in _IDSelectedItem) {
-        Response response = await cartRepo.getbyid(productId);
+      for (int cartId in _IDSelectedItem) {
+        Response response = await cartRepo.getbyid(cartId);
         if (response.statusCode == 200) {
           var data = response.body;
-          print(data);
           CartData cartData = CartData.fromJson(data["data"][0]);
           bool newitem = true;
           for (Newcartmodel cart in listcartinorder) {
@@ -374,6 +381,37 @@ class CartController extends GetxController implements GetxService {
           }
           if (newitem) {
             await storecontroller.getbyid(cartData.product!.storeId!);
+            Storesitem storeitem = storecontroller.storeItem!;
+
+            Newcartmodel newcartmodel =
+                Newcartmodel(storeitem: storeitem, cartdata: [cartData]);
+            listcartinorder.add(newcartmodel);
+            update();
+          }
+        }
+      }
+    }
+    if (_IDSelectedCombo.isNotEmpty) {
+      for (int cartId in _IDSelectedCombo) {
+        Response response = await cartRepo.getbyid(cartId);
+        if (response.statusCode == 200) {
+          var data = response.body;
+          CartData cartData = CartData.fromJson(data["data"][0]);
+          bool newitem = true;
+          for (Newcartmodel cart in listcartinorder) {
+            if (cart.storeitem!.storeId == cartData.combo!.storeId) {
+              Set<int> cartIdSet = cart.cartdata!.map((e) => e.cartId!).toSet();
+              if (!cartIdSet.contains(cartData.cartId)) {
+                cart.cartdata!.add(cartData);
+                newitem = false;
+                update();
+              } else {
+                newitem = false;
+              }
+            }
+          }
+          if (newitem) {
+            await storecontroller.getbyid(cartData.combo!.storeId!);
             Storesitem storeitem = storecontroller.storeItem!;
 
             Newcartmodel newcartmodel =

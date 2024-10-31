@@ -63,6 +63,7 @@ class ProductInCart {
   int? productId;
   String? productName;
   String? image;
+  
   int? quantity;
   double? unitPrice;
   double? totalPrice;
@@ -78,6 +79,7 @@ class ProductInCart {
       this.image,
       this.quantity,
       this.unitPrice,
+      
       this.totalPrice,
       this.storeId,
       this.status,
@@ -93,6 +95,7 @@ class ProductInCart {
     quantity = json['quantity'];
     unitPrice = json['unitPrice'];
     totalPrice = json['totalPrice'];
+   
     storeId = json['storeId'];
     status = json['status'];
     createdAt = json['createdAt'];
@@ -105,6 +108,7 @@ class ProductInCart {
     data['userId'] = this.userId;
     data['productId'] = this.productId;
     data['productName'] = this.productName;
+    
     data['image'] = this.image;
     data['quantity'] = this.quantity;
     data['unitPrice'] = this.unitPrice;
@@ -123,6 +127,7 @@ class ComboInCart {
   int? comboId;
   String? comboName;
   String? image;
+  List<int>? drinkId;
   int? quantity;
   double? unitPrice;
   double? totalPrice;
@@ -137,6 +142,7 @@ class ComboInCart {
       this.comboName,
       this.image,
       this.quantity,
+      this.drinkId,
       this.unitPrice,
       this.totalPrice,
       this.storeId,
@@ -154,6 +160,12 @@ class ComboInCart {
     unitPrice = json['unitPrice'];
     totalPrice = json['totalPrice'];
     storeId = json['storeId'];
+     if (json['drinkId'] != null) {
+      drinkId = <int>[];
+      json['drinkId'].forEach((v) {
+        drinkId!.add(v);
+      });
+    };
     status = json['status'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
@@ -168,6 +180,9 @@ class ComboInCart {
     data['image'] = this.image;
     data['quantity'] = this.quantity;
     data['unitPrice'] = this.unitPrice;
+    if (this.drinkId != null) {
+      data['drinkId'] = this.drinkId!.map((v) => v.toString()).toList();
+    }
     data['totalPrice'] = this.totalPrice;
     data['storeId'] = this.storeId;
     data['status'] = this.status;

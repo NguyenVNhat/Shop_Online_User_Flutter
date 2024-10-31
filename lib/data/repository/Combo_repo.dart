@@ -1,5 +1,6 @@
 import 'package:flutter_user_github/data/api/ApiClient.dart';
 import 'package:flutter_user_github/data/api/AppConstant.dart';
+import 'package:flutter_user_github/models/Dto/AddComboToCartDto.dart';
 import 'package:flutter_user_github/models/Dto/OrderComboDto.dart';
 import 'package:get/get.dart';
 
@@ -24,5 +25,8 @@ class ComboRepo {
   }
   Future<Response> order(Ordercombodto dto) async {
     return await apiClient.postData(Appconstant.ORDER_COMBO_2_URL,dto.toJson());
+  }
+   Future<Response> addtocarrt(Combotocartdto dto) async {
+    return await apiClient.postData(Appconstant.COMBO_TO_CART_URL,dto.toJson());
   }
 }

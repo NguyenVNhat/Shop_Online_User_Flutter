@@ -3,6 +3,7 @@ import 'package:flutter_user_github/data/controller/Cart_controller.dart';
 import 'package:flutter_user_github/data/controller/Category_controller.dart';
 import 'package:flutter_user_github/data/controller/Combo_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/Size_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
@@ -87,8 +88,10 @@ class MyApp extends StatelessWidget {
         Get.find<SizeController>().getall();
         Get.find<ComboController>().getall();
         Get.find<ProductController>().getall();
+        Get.find<ProductController>().getRecommendProduct();
         Get.find<Storecontroller>().getall();
         Get.find<CategoryController>().getall();
+        Get.find<PromotionController>().getall();
       }
 
       return GetMaterialApp(

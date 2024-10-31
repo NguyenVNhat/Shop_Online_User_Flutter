@@ -480,10 +480,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                             height: AppDimention.size100 * 1.8,
                                             decoration: BoxDecoration(
                                                 color: AppColor.yellowColor,
-                                                image: DecorationImage(
-                                                  fit: BoxFit.cover,
-                                                  image: shipper!.avatar == null ? AssetImage("assets/image/default_avatar.jpg") : MemoryImage(base64Decode(shipper!.avatar!))
-                                                )),
+                                                // image: DecorationImage(
+                                                //   fit: BoxFit.cover,
+                                                //   image: shipper!.avatar == null ? AssetImage("assets/image/default_avatar.jpg") : MemoryImage(base64Decode(shipper!.avatar!))
+                                                // )
+                                                ),
                                           ),
                                           Container(
                                             width: AppDimention.size100 * 2,

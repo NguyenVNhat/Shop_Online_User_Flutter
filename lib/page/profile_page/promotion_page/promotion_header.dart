@@ -1,4 +1,5 @@
 
+import 'package:flutter_user_github/page/profile_page/promotion_page/user_promotion.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,7 @@ class _PromotionHeaderState extends State<PromotionHeader> {
             ),
           ),
          Container(
-          width: AppDimention.size100 * 3.5,
+          width: AppDimention.size100 * 3,
           child: Center(
             child:  Text("Khuyến mãi",
               style: TextStyle(
@@ -43,6 +44,12 @@ class _PromotionHeaderState extends State<PromotionHeader> {
                   color: Colors.black,
             )),
           ),
+         ),
+         GestureDetector(
+          onTap:(){
+              Get.to(UserPromotion());
+          },
+          child:Text("Kho"),
          )
          
         ],

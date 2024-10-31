@@ -14,13 +14,17 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  CartController cartController =  Get.find<CartController>();
   @override
   void initState() {
     super.initState();
-    Get.find<CartController>().getall();
-    Get.find<CartController>().getListCartV2();
-    Get.find<CartController>().resetIDSelected();
-    Get.find<CartController>().getDistinctStoreId();
+    cartController.getall();
+    cartController.getListCartV2();
+    cartController.resetIDSelected();
+    cartController.getDistinctStoreId();
+
+    cartController.updateTotal(cartController.totalprice, false);
+
   }
 
   @override

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter_user_github/data/controller/Auth_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/data/repository/Product_repo.dart';
 import 'package:flutter_user_github/models/Dto/AddCartDto.dart';
@@ -7,12 +10,17 @@ import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/ProductModel.dart';
 import 'package:flutter_user_github/models/Model/RateModel.dart';
+import 'package:flutter_user_github/models/Model/UserModel.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 
 class ProductController extends GetxController {
   final ProductRepo productRepo;
+  UserController userController = Get.find<UserController>();
+  AuthController authController = Get.find<AuthController>();
   ProductController({
     required this.productRepo,
   });
@@ -45,7 +53,6 @@ class ProductController extends GetxController {
         return item;
       }
     }
-    return null;
   }
 
   // Thêm sản phẩm vào giỏ hàng
@@ -127,7 +134,7 @@ class ProductController extends GetxController {
   }
 
   Future<List<Productitem>> getProductByStoreCategoryIdV2(
-    int storeid, int categoryid) async {
+      int storeid, int categoryid) async {
     List<Productitem> list = [];
     Response response =
         await productRepo.getbystoreandcategoryid(storeid, categoryid);
@@ -299,27 +306,42 @@ class ProductController extends GetxController {
   }
 
   Future<void> addcomment(Commentdto dto) async {
-    Response response = await productRepo.addcomment(dto);
-    if (response.statusCode == 200) {
-      Get.snackbar(
-        "Thông báo",
-        "Phản hồi thành công",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.white,
-        colorText: Colors.black,
-        icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
-        borderRadius: 10,
-        margin: EdgeInsets.all(10),
-        duration: Duration(seconds: 1),
-        isDismissible: true,
-      );
-    } else {
-      print("Phản hồi thất bại");
+    var response = await productRepo.addComment(dto);
+    print(response);
+
+    // Chuyển đổi stream thành chuỗi để xử lý
+    var responseString = await response.stream.bytesToString();
+
+    try {
+      // Giải mã JSON trực tiếp từ chuỗi phản hồi
+      var jsonResponse = jsonDecode(responseString);
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Thông báo",
+          "Phản hồi thành công",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white,
+          colorText: Colors.black,
+          icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+          borderRadius: 10,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+          isDismissible: true,
+        );
+        print("oke");
+      } else {
+        print("Phản hồi thất bại ${response.statusCode}");
+        print("Nội dung lỗi: ${jsonResponse['message']}");
+      }
+    } catch (e) {
+      print("Lỗi khi giải mã JSON: $e");
+      print("Nội dung không hợp lệ: $responseString");
     }
   }
 
-  List<RateData> listcomment = [];
-  List<RateData> get getlistcomment => listcomment;
+  List<DisplayRate> listcomment = [];
+  List<DisplayRate> get getlistcomment => listcomment;
   bool? loadingComment = false;
   bool? get getloadingComment => loadingComment;
   Future<void> getcomment(int productid) async {
@@ -328,7 +350,14 @@ class ProductController extends GetxController {
     if (response.statusCode == 200) {
       var data = response.body;
       listcomment = [];
-      listcomment.addAll(Ratemodel.fromJson(data).getlistrate ?? []);
+      for (RateData item in Ratemodel.fromJson(data).getlistrate ?? []) {
+        User? user = await userController.getbyid(item.userId!);
+        while (userController.getloadreceiver!) {
+          await Future.delayed(Duration(microseconds: 100));
+        }
+        DisplayRate displayRate = DisplayRate(user: user, rateData: item);
+        listcomment.add(displayRate);
+      }
     } else {
       print("Lỗi không nhận được phản hồi ${response.statusCode}");
     }
@@ -338,12 +367,15 @@ class ProductController extends GetxController {
 
   MomoModels _qrcode = MomoModels();
   MomoModels get qrcode => _qrcode;
+  ZaloData _qrcodeZalo = ZaloData();
+  ZaloData get qrcodeZalo => _qrcodeZalo;
   bool loadingOrder = false;
   bool get getloadingOrder => loadingOrder;
   Future<void> order(Orderproductdto dto) async {
     loadingOrder = true;
     Response response = await productRepo.order(dto);
     if (response.statusCode == 200) {
+      var data = response.body;
       if (dto.paymentMethod == "CASH") {
         Get.snackbar(
           "Thông báo",
@@ -359,13 +391,14 @@ class ProductController extends GetxController {
         );
         Get.find<UserController>().addannouce(
             "Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !");
-      } else {
-        var data = response.body;
+      } else if (dto.paymentMethod == "MOMO") {
         _qrcode = (MomoModels.fromJson(data).momo);
         print("PAYURRL ${_qrcode.payUrl}");
+      } else {
+        _qrcodeZalo = ZaloModels.fromJson(data).getzalodata!;
+        print("ZALOURL ${_qrcode.payUrl}");
       }
-    }
-    else{
+    } else {
       print("Lỗi đặt hàng ${response.statusCode} ${response.body["message"]}");
     }
     loadingOrder = false;
@@ -383,6 +416,59 @@ class ProductController extends GetxController {
       print("Lỗi không lấy được sản phẩm");
       return result;
     }
+  }
+
+  bool loadingRecommendProduct = false;
+  bool get getloadingRecommendProduct => loadingRecommendProduct;
+  List<int> listProductId = [];
+  Future<void> getRecommendProduct() async {
+    loadingRecommendProduct = true;
+    Response response =
+        await productRepo.getRecommendProduct(authController.getiduser);
+    if (response.statusCode == 200) {
+      listProductId = [];
+      if (response.body is List) {
+        listProductId = List<int>.from(response.body);
+      } else if (response.body is String) {
+        listProductId = List<int>.from(jsonDecode(response.body));
+      } else {
+        throw Exception("response.body không phải là kiểu hợp lệ");
+      }
+    } else {
+      print("Lỗi không lấy được danh sách sản phẩm hay mua");
+    }
+    loadingRecommendProduct = false;
+    update();
+  }
+
+  List<Productitem> listProductRecommend = [];
+  List<Productitem> get getlistProductRecommend => listProductRecommend;
+  void GetProductRecommend() async {
+    for (Productitem item in _productList) {
+      if (listProductId.contains(item.productId)) {
+        listProductRecommend.add(item);
+      }
+    }
+  }
+
+  bool loadDrinkInCombo = false;
+  bool get getloadDrinkInCombo => loadDrinkInCombo;
+  Future<List<Productitem>?> getListDrinkInCombo(List<int> storeId) async {
+    loadDrinkInCombo = true;
+    List<Productitem> res = [];
+    Response response = await productRepo.getListDrinkInCombo(storeId);
+    if (response.statusCode == 200) {
+      res = [];
+      var data = response.body;
+      res.addAll(Productmodel.fromJson(data).get_listproduct ?? []);
+      loadDrinkInCombo = false;
+      update();
+      return res;
+    }
+    else{
+      print("Không lấy được danh sách nước uống ${response.statusCode} ${response.body}");
+    }
+    
   }
 }
 

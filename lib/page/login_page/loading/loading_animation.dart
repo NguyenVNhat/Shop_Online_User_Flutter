@@ -47,6 +47,7 @@ class _BarLoadingScreenState extends State<BarLoadingScreen>
         sizeController.isLoading ||
         comboController.isLoading ||
         productController.isLoading ||
+        productController.getloadingRecommendProduct ||
         storecontroller.isLoading ||
         promotionController.getloading! ||
         categoryController.isLoading!) {

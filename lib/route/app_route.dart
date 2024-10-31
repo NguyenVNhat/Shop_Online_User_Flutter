@@ -38,8 +38,11 @@ class AppRoute {
   static String store_chat_detail(int storeId) =>
       '$STORE_CHAT_DETAIL_PAGE?storeId=$storeId';
 
-  static String order_combo(int comboid, int drinkid) =>
-      '$ORDER_COMBO_PAGE?comboid=$comboid&drinkid=$drinkid';
+  static String orderCombo(int comboId, List<int> drinkIds) {
+  String drinkIdString = drinkIds.join(",");
+  return '$ORDER_COMBO_PAGE?comboid=$comboId&drinkid=$drinkIdString';
+}
+
 
   static String order_product(int product, String size, int quantity) =>
       '$ORDER_PRODUCT_PAGE?product=$product&size=$size&quantity=$quantity';

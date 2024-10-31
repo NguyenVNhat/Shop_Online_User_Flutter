@@ -83,9 +83,9 @@ class _HomeComboState extends State<HomeCombo> {
                                     children: [
                                       Text(
                                         item.comboName ?? '',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 18),
+                                            fontSize: 18,color: Colors.black.withOpacity(0.7)),
                                       ),
                                       Row(
                                         children: [

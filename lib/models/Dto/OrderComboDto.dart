@@ -1,7 +1,7 @@
 class Ordercombodto {
   String? paymentMethod;
   int? comboId;
-  List<int>? drinkIds; // Thay đổi drinkId thành drinkIds
+  List<int>? drinkIds;
   int? storeId;
   int? quantity;
   String? size;
@@ -12,7 +12,7 @@ class Ordercombodto {
   Ordercombodto({
     this.paymentMethod,
     this.comboId,
-    this.drinkIds, // Cập nhật ở constructor
+    this.drinkIds,
     this.storeId,
     this.quantity,
     this.size,
@@ -25,7 +25,7 @@ class Ordercombodto {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['paymentMethod'] = this.paymentMethod;
     data['comboId'] = this.comboId;
-    data['drinkIds'] = this.drinkIds; // Cập nhật ở đây
+    data['drinkId'] = this.drinkIds;
     data['storeId'] = this.storeId;
     data['quantity'] = this.quantity;
     data['size'] = this.size;

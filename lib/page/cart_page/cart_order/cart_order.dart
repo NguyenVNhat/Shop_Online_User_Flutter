@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
+import 'package:flutter_user_github/data/controller/Product_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Model/CartModel.dart';
+import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
+import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter_user_github/page/cart_page/cart_order/cart_order_header.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
@@ -32,7 +35,9 @@ class _CartOrderState extends State<CartOrder> {
   TextEditingController noteController = TextEditingController();
 
   CartController cartController = Get.find<CartController>();
+  ProductController productController = Get.find<ProductController>();
   List<int> listCategoryId = [];
+  
   @override
   void initState() {
     super.initState();
@@ -136,14 +141,14 @@ class _CartOrderState extends State<CartOrder> {
     User user = Get.find<UserController>().userprofile!;
     setState(() {
       String address = user.address!;
+      getCoordinatesFromAddress(address);
       List<String> listaddress = address.split(",");
-      print(listaddress);
+
 
       setState(() {
         HomenumberController.text = listaddress[0];
         StreetController.text = listaddress[1];
         DistrictController.text = listaddress[2];
-        print(listaddress[3].trim());
         String provinceFromAddress = listaddress[3].trim().toLowerCase();
 
         if (provinces
@@ -178,34 +183,29 @@ class _CartOrderState extends State<CartOrder> {
   bool? isload = false;
   String? announce = "";
   Future<void> _order() async {
-    
     String paymentMethod = selectedPayment!;
     if (paymentMethod.isEmpty ||
         HomenumberController.text.isEmpty ||
         StreetController.text.isEmpty ||
         DistrictController.text.isEmpty ||
-         selectedProvince!.isEmpty) {
+        selectedProvince!.isEmpty) {
       setState(() {
         announce = "Vui lòng nhập đủ thông tin";
       });
     } else {
-      
       String address = HomenumberController.text +
-        " " +
-        StreetController.text +
-        ", " +
-        DistrictController.text +
-        ", " +
-       selectedProvince!;
-      if(ischangePoint == true){
+          " " +
+          StreetController.text +
+          ", " +
+          DistrictController.text +
+          ", " +
+          selectedProvince!;
+      if (ischangePoint == true) {
         longitude = tappedPoint.longitude;
         latitude = tappedPoint.latitude;
-      }
-      else{
-        getCoordinatesFromAddress(address);
-      }
+      } 
 
-      cartController.orderall(address, paymentMethod,latitude!,longitude!);
+      cartController.orderall(address, paymentMethod, latitude!, longitude!);
       while (cartController.ordering!) {
         await Future.delayed(const Duration(microseconds: 100));
       }
@@ -219,28 +219,40 @@ class _CartOrderState extends State<CartOrder> {
           } else {
             throw 'Could not launch $payUrl';
           }
+        } else if (paymentMethod == "ZALOPAY") {
+          ZaloData zalo = cartController.qrcodeZalo;
+          String payUrl = zalo.orderurl!;
+          if (await canLaunchUrl(Uri.parse(payUrl))) {
+            await launchUrl(Uri.parse(payUrl));
+          } else {
+            throw 'Could not launch $payUrl';
+          }
         }
       }
     }
   }
-   double zoomValue = 14;
+
+  double zoomValue = 14;
   MapController mapController = MapController();
   LatLng tappedPoint = LatLng(16.0471, 108.2068);
   bool? ischangePoint = false;
   bool loadlocation = false;
   FunctionMap functionmap = FunctionMap();
   void _showDropdown() async {
-      if (selectedProvince== null || selectedProvince!.isEmpty || HomenumberController.text.isEmpty ||StreetController.text.isEmpty || DistrictController.text.isEmpty ) {
-        Point mypoint = await functionmap.getCurrentLocation() as Point;
+    if (selectedProvince == null ||
+        selectedProvince!.isEmpty ||
+        HomenumberController.text.isEmpty ||
+        StreetController.text.isEmpty ||
+        DistrictController.text.isEmpty) {
+      Point mypoint = await functionmap.getCurrentLocation() as Point;
       setState(() {
         tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
         loadlocation = true;
         ischangePoint = true;
         print(2);
       });
-      }
-      else{
-         Point addresspoint = await functionmap.getCoordinatesFromAddress(
+    } else {
+      Point addresspoint = await functionmap.getCoordinatesFromAddress(
           HomenumberController.text +
               " " +
               StreetController.text +
@@ -255,8 +267,7 @@ class _CartOrderState extends State<CartOrder> {
         loadlocation = true;
         print(1);
       });
-      }
-     
+    }
 
     showDialog(
       context: context,
@@ -429,6 +440,73 @@ class _CartOrderState extends State<CartOrder> {
       },
     );
   }
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (Match match) => '${match[1]}.',
+        );
+  }
+  // Show list water
+  void _showDialogWater(List<int> listwater) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimention.size10),
+              ),
+              child: StatefulBuilder(
+                  builder: (BuildContext context, StateSetter setState) {
+                return Container(
+                  width: AppDimention.screenWidth,
+                  height: AppDimention.size100 * 2.5,
+                  padding: EdgeInsets.all(AppDimention.size10),
+                  child: Column(
+                    children: listwater.map((item) {
+                      Productitem? productitem =
+                          productController.getproductbyid(item);
+                      return Container(
+                          width: AppDimention.screenWidth,
+                          height: AppDimention.size100,
+                          padding: EdgeInsets.all(AppDimention.size10),
+                          margin: EdgeInsets.only(bottom: AppDimention.size10),
+                          decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
+                              image: DecorationImage(
+                                  image: MemoryImage(
+                                      base64Decode(productitem!.image!)),
+                                  fit: BoxFit.cover)),
+                          child: Container(
+                            width: AppDimention.screenWidth,
+                            height: AppDimention.size100,
+                            padding: EdgeInsets.all(AppDimention.size10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "${productitem!.productName!}",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  "đ${_formatNumber(productitem.discountedPrice != null ? productitem.discountedPrice!.toInt() : productitem.price!.toInt())}",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ));
+                    }).toList(),
+                  ),
+                );
+              }));
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -460,6 +538,7 @@ class _CartOrderState extends State<CartOrder> {
                             .listcartinorder[index].cartdata!) {
                           listCategoryId.add(cart.cartId!);
                         }
+                       
                         return GestureDetector(
                           onTap: () {},
                           child: Container(
@@ -522,12 +601,7 @@ class _CartOrderState extends State<CartOrder> {
                                               bottomRight: Radius.circular(5)),
                                         ),
                                         child: Column(
-                                          children: cartController
-                                              .listcartinorder[index].cartdata!
-                                              .asMap()
-                                              .entries
-                                              .map((entry) {
-                                         
+                                          children: cartController.listcartinorder[index].cartdata!.asMap().entries.map((entry) {
                                             var item = entry.value;
                                             ProductInCart? productInCart;
                                             ComboInCart? comboInCart;
@@ -598,7 +672,7 @@ class _CartOrderState extends State<CartOrder> {
                                                                   .spaceBetween,
                                                           children: [
                                                             Text(
-                                                              "${key ? productInCart!.unitPrice!.toInt() : comboInCart!.unitPrice!.toInt()}",
+                                                              "đ${key ? _formatNumber(productInCart!.unitPrice!.toInt()) : _formatNumber(comboInCart!.unitPrice!.toInt())}",
                                                               style: TextStyle(
                                                                   color: Colors
                                                                       .red,
@@ -612,20 +686,41 @@ class _CartOrderState extends State<CartOrder> {
                                                                   onTap: () {},
                                                                   child:
                                                                       Container(
-                                                                    height: AppDimention
-                                                                        .size20,
+                                                                        padding: EdgeInsets.only(left: AppDimention.size10,right: AppDimention.size10),
+                                                                        height: AppDimention.size30,
+                                                                        decoration: BoxDecoration(
+                                                                      color: Colors.grey,
+                                                                      borderRadius: BorderRadius.circular(3)
+                                                                    ),
                                                                     child:
                                                                         Center(
                                                                       child:
                                                                           Text(
                                                                         "SL : ${key ? productInCart!.quantity : comboInCart!.quantity}",
                                                                         style: TextStyle(
-                                                                            fontSize:
-                                                                                12),
+                                                                            fontSize:12,color: Colors.white),
                                                                       ),
                                                                     ),
                                                                   ),
                                                                 ),
+                                                                if(!key)
+                                                                GestureDetector(
+                                                                  onTap: (){
+                                                                    _showDialogWater(comboInCart!.drinkId!);
+                                                                  },
+                                                                  child: Container(
+                                                                    margin: EdgeInsets.only(left: AppDimention.size10),
+                                                                    width: AppDimention.size30,
+                                                                    height: AppDimention.size30,
+                                                                    decoration: BoxDecoration(
+                                                                      color: Colors.grey,
+                                                                      borderRadius: BorderRadius.circular(3)
+                                                                    ),
+                                                                    child: Center(
+                                                                      child: Icon(Icons.coffee_sharp,size: 18,color: Colors.white,),
+                                                                    ),
+                                                                  )
+                                                                )
                                                               ],
                                                             )
                                                           ],
@@ -638,7 +733,7 @@ class _CartOrderState extends State<CartOrder> {
                                             );
                                           }).toList(),
                                         ),
-                                      )
+                                      ),
                                     ],
                                   ),
                                 )
@@ -650,9 +745,18 @@ class _CartOrderState extends State<CartOrder> {
                     );
                   }
                 }),
+                 Container(
+                  width: AppDimention.screenWidth,
+                 
+                  padding: EdgeInsets.only(
+                      left: AppDimention.size10, right: AppDimention.size10),
+                  child: Text("Tổng : đ${_formatNumber(cartController.totalprice)}"),      
+                
+                ),
+                
                 Container(
                   width: AppDimention.screenWidth,
-                  margin: EdgeInsets.only(top: AppDimention.size50),
+                  margin: EdgeInsets.only(top: AppDimention.size30),
                   padding: EdgeInsets.only(
                       left: AppDimention.size10, right: AppDimention.size10),
                   child: Column(
@@ -857,7 +961,7 @@ class _CartOrderState extends State<CartOrder> {
                     ],
                   ),
                 ),
-                 Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     GestureDetector(
@@ -874,7 +978,6 @@ class _CartOrderState extends State<CartOrder> {
                     ),
                   ],
                 ),
-                
                 SizedBox(
                   height: AppDimention.size15,
                 ),
@@ -952,93 +1055,6 @@ class _CartOrderState extends State<CartOrder> {
                       return paymentMethod.map((item) {
                         return Container(
                           decoration: BoxDecoration(),
-                          alignment: Alignment.centerLeft,
-                          height: 60,
-                          width: AppDimention.size100 * 3,
-                          child: Text(item, style: TextStyle(fontSize: 16)),
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: AppDimention.size10,
-                    ),
-                    Text("Mã giảm giá"),
-                  ],
-                ),
-                Container(
-                  width: AppDimention.screenWidth,
-                  margin: EdgeInsets.all(AppDimention.size10),
-                  decoration: BoxDecoration(color: Colors.white),
-                  child: DropdownButtonFormField(
-                    hint: Text(
-                      "Chọn mã giảm giá",
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
-                    ),
-                    items: paymentVoucher.map((item) {
-                      return DropdownMenuItem(
-                        value: item,
-                        child: Container(
-                          width: AppDimention.size100 * 3.8,
-                          margin: EdgeInsets.only(
-                              top: AppDimention.size5,
-                              bottom: AppDimention.size5),
-                          padding: EdgeInsets.all(AppDimention.size10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                  width: AppDimention.size100 * 3.8,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        item,
-                                      ),
-                                      Text("10000 vnđ")
-                                    ],
-                                  )),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      var selectedMethod = value as String;
-                      onChangedVoucher(selectedMethod);
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: const Color.fromARGB(57, 158, 158, 158),
-                          width: 1.0,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: const Color.fromARGB(57, 158, 158, 158),
-                          width: 1.0,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimention.size5),
-                        borderSide: BorderSide(
-                          color: Colors.green,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    selectedItemBuilder: (BuildContext context) {
-                      return paymentVoucher.map((item) {
-                        return Container(
                           alignment: Alignment.centerLeft,
                           height: 60,
                           width: AppDimention.size100 * 3,

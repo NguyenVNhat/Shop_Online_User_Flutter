@@ -158,43 +158,7 @@ class _ProfileSettingState extends State<ProfileSetting> {
                   ),
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  Get.toNamed(AppRoute.TRANSFER_POINT_PAGE);
-                },
-                onTapDown: (_) {
-                  setState(() {
-                    _rowColor4 = Colors.grey.withOpacity(0.3);
-                  });
-                },
-                onTapUp: (_) {
-                  setState(() {
-                    _rowColor4 = Colors.transparent;
-                  });
-                },
-                child: Container(
-                  padding: EdgeInsets.only(top:AppDimention.size10,bottom: AppDimention.size10),
-                  
-                  decoration: BoxDecoration(
-                    color: _rowColor4,
-                    borderRadius: BorderRadius.circular(AppDimention.size10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SelectSettingCustom(
-                        icon: Icons.polyline_outlined,
-                        title: "Đổi điểm",
-                      ),
-                      Icon(
-                        Icons.arrow_right_rounded,
-                        size: AppDimention.size40,
-                        color: AppColor.mainColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              
               SizedBox(
                 height: AppDimention.size10,
               ),

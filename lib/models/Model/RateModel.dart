@@ -1,3 +1,5 @@
+import 'package:flutter_user_github/models/Model/UserModel.dart';
+
 class Ratemodel {
   bool? success;
   String? message;
@@ -28,47 +30,59 @@ class Ratemodel {
   }
 }
 
+class DisplayRate{
+  User? user;
+  RateData? rateData;
+  DisplayRate({
+    this.user,
+    this.rateData,
+  });
+}
 class RateData {
   int? rateId;
-  String? userName;
+  int? userId;
   int? rate;
   String? comment;
   String? createdAt;
   String? updatedAt;
   int? productId;
   int? comboId;
+  List<String>? imageRatings;
 
   RateData(
       {this.rateId,
-      this.userName,
+      this.userId,
       this.rate,
       this.comment,
       this.createdAt,
       this.updatedAt,
       this.productId,
-      this.comboId});
+      this.comboId,
+      this.imageRatings});
 
   RateData.fromJson(Map<String, dynamic> json) {
     rateId = json['rateId'];
-    userName = json['userName'];
+    userId = json['userId'];
     rate = json['rate'];
     comment = json['comment'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
     productId = json['productId'];
     comboId = json['comboId'];
+    imageRatings = json['imageRatings'].cast<String>();
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['rateId'] = this.rateId;
-    data['userName'] = this.userName;
+    data['userId'] = this.userId;
     data['rate'] = this.rate;
     data['comment'] = this.comment;
     data['createdAt'] = this.createdAt;
     data['updatedAt'] = this.updatedAt;
     data['productId'] = this.productId;
     data['comboId'] = this.comboId;
+    data['imageRatings'] = this.imageRatings;
     return data;
   }
 }

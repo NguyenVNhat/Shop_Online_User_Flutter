@@ -1,4 +1,5 @@
 import 'package:flutter_user_github/data/controller/Auth_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/page/profile_page/profile_controll.dart';
 import 'package:flutter_user_github/page/profile_page/profile_footer.dart';
 import 'package:flutter_user_github/page/profile_page/profile_header.dart';

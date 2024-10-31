@@ -81,7 +81,7 @@ class OrderItem {
     updatedAt = json['updatedAt'];
     longitude = json['longitude'];
     latitude = json['latitude'];
-    feedback = json['feedback'];
+    feedback = json['feedBack'];
     if (json['orderDetails'] != null) {
       orderDetails = <OrderDetails>[];
       json['orderDetails'].forEach((v) {
@@ -104,7 +104,7 @@ class OrderItem {
     data['updatedAt'] = this.updatedAt;
     data['longitude'] = this.longitude;
     data['latitude'] = this.latitude;
-    data['feedback'] = this.feedback;
+    data['feedBack'] = this.feedback;
     if (this.orderDetails != null) {
       data['orderDetails'] = this.orderDetails!.map((v) => v.toJson()).toList();
     }

@@ -1,15 +1,20 @@
+import 'dart:io';
+
 class Commentdto {
   int? rate;
   String? comment;
-  int? productId;
+  List<int>? productId;
+  List<int>? comboId;
+  List<File>? imageFiles; 
 
-  Commentdto({this.rate, this.comment, this.productId});
+  Commentdto({this.rate, this.comment, this.productId,this.comboId,this.imageFiles});
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['rate'] = this.rate;
-    data['comment'] = this.comment;
-    data['productId'] = this.productId;
-    return data;
-  }
+ Map<String, String> toJson() {
+    return {
+      'rate': rate.toString(),
+      'comment': comment ?? '',
+      'productId': productId?.join(',') ?? '',
+      'comboId': comboId?.join(',') ?? '',
+    };
+ }
 }

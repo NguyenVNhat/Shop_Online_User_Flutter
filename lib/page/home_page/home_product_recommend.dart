@@ -8,16 +8,16 @@ import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class HomeProduct extends StatefulWidget {
-  const HomeProduct({
+class HomeProductRecommend extends StatefulWidget {
+  const HomeProductRecommend({
     Key? key,
   }) : super(key: key);
 
   @override
-  _HomeProductState createState() => _HomeProductState();
+  _HomeProductRecommendState createState() => _HomeProductRecommendState();
 }
 
-class _HomeProductState extends State<HomeProduct> {
+class _HomeProductRecommendState extends State<HomeProductRecommend> {
   @override
   void initState() {
     super.initState();
@@ -33,6 +33,7 @@ class _HomeProductState extends State<HomeProduct> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ProductController>(builder: (productController) {
+      productController.GetProductRecommend();
       return productController.isLoading
           ? Center(
               child: CircularProgressIndicator(),
@@ -45,9 +46,9 @@ class _HomeProductState extends State<HomeProduct> {
                       width: AppDimention.size10,
                     ),
                     Text(
-                      "Sản phẩm bán chạy",
+                      "Sản phẩm ưu thích của bạn",
                       style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.w600,color: Colors.black.withOpacity(0.7)),
                     ),
                   ],
                 ),
@@ -60,9 +61,11 @@ class _HomeProductState extends State<HomeProduct> {
                   ),
                   itemCount: 10,
                   itemBuilder: (context, index) {
-                    Productitem item = productController.productList[index];
+                    Productitem item = productController.getlistProductRecommend[index];
+                    
                     return GestureDetector(
                       onTap: () {
+                       
                         Get.toNamed(
                             AppRoute.get_product_detail(item.productId!));
                       },
@@ -96,8 +99,7 @@ class _HomeProductState extends State<HomeProduct> {
                                     height: AppDimention.size5,
                                   ),
                                   Text(
-                                    productController
-                                        .productList[index].productName!,
+                                    item.productName!,
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: AppColor.mainColor),
@@ -164,7 +166,7 @@ class _HomeProductState extends State<HomeProduct> {
                                       Icon(Icons.delivery_dining_sharp),
                                       Text(
                                         "Miễn phí vận chuyển",
-                                        style: TextStyle(fontSize: 10),
+                                        style: TextStyle(fontSize: 10,color: Colors.black.withOpacity(0.7)),
                                         overflow: TextOverflow.ellipsis,
                                       )
                                     ],

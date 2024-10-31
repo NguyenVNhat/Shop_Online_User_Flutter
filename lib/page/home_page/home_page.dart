@@ -4,7 +4,8 @@ import 'package:flutter_user_github/page/home_page/home_combo.dart';
 import 'package:flutter_user_github/page/home_page/home_folder.dart';
 import 'package:flutter_user_github/page/home_page/home_footer.dart';
 import 'package:flutter_user_github/page/home_page/home_header.dart';
-import 'package:flutter_user_github/page/home_page/home_product.dart';
+import 'package:flutter_user_github/page/home_page/home_product_bestseller.dart';
+import 'package:flutter_user_github/page/home_page/home_product_recommend.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                  Row(
                   children: [
                     SizedBox(width: AppDimention.size10,),
-                    Text("Combo trong tuần",style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600),),
+                    Text("Combo trong tuần",style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600,color: Colors.black.withOpacity(0.7)),),
                   ],
                 ),
                 SizedBox(
@@ -54,7 +55,11 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   height: AppDimention.size15,
                 ),
-                HomeProduct(),
+                HomeProductRecommend(),
+                SizedBox(
+                  height: AppDimention.size15,
+                ),
+                HomeProductBestseller(),
                 
                 if (Get.find<ProductController>().productList.length > 10)
                   Container(

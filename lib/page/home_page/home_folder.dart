@@ -6,6 +6,7 @@ import 'package:flutter_user_github/data/controller/Category_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeFolder extends StatefulWidget {
   const HomeFolder({Key? key}) : super(key: key);
@@ -19,6 +20,17 @@ class _HomeFolderState extends State<HomeFolder> {
   final ProductController productController = Get.find<ProductController>();
   final CategoryController categoryController = Get.find<CategoryController>();
   final ScrollController _scrollController = ScrollController();
+
+  List<IconData> listIconCategory = [
+    FontAwesomeIcons.burger,
+    FontAwesomeIcons.pizzaSlice,
+    FontAwesomeIcons.fire,
+    FontAwesomeIcons.lemon,
+    FontAwesomeIcons.cheese,
+    FontAwesomeIcons.drumstickBite,
+    FontAwesomeIcons.cookie,
+    FontAwesomeIcons.martiniGlassCitrus
+  ];
 
   bool? loaded = false;
 
@@ -54,7 +66,7 @@ class _HomeFolderState extends State<HomeFolder> {
     });
 
     _scrollController.animateTo(
-      index * (AppDimention.size150 + AppDimention.size10),
+      index * (AppDimention.size150 - 5 * index ),
       duration: Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -68,7 +80,6 @@ class _HomeFolderState extends State<HomeFolder> {
 
   @override
   Widget build(BuildContext context) {
-
     return GetBuilder<CategoryController>(
       builder: (categoryController) {
         return categoryController.isLoading!
@@ -86,7 +97,8 @@ class _HomeFolderState extends State<HomeFolder> {
                         Text(
                           "Danh mục sản phẩm",
                           style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.w600),
+                            
+                              fontSize: 25, fontWeight: FontWeight.w600,color: Colors.black.withOpacity(0.7)),
                         ),
                       ],
                     ),
@@ -114,12 +126,13 @@ class _HomeFolderState extends State<HomeFolder> {
                                       onTap: () => _onCategorySelected(
                                           item.categoryId!, index),
                                       child: Container(
-                                        width: AppDimention.size150,
+                                        padding: EdgeInsets.only(left: AppDimention.size20,right: AppDimention.size20),
                                         height: AppDimention.size50,
                                         margin: EdgeInsets.only(
-                                            left: AppDimention.size10,
+                                            left: AppDimention.size20,
                                             top: AppDimention.size10),
                                         decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(AppDimention.size10),
                                           gradient: item.categoryId ==
                                                   categorySelected
                                               ? LinearGradient(
@@ -141,8 +154,26 @@ class _HomeFolderState extends State<HomeFolder> {
                                             ),
                                           ),
                                         ),
-                                        child: Center(
-                                            child: Text(item.categoryName!)),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              listIconCategory[index],
+                                              color: item.categoryId ==
+                                                      categorySelected
+                                                  ? Colors.blue
+                                                  : Colors.amber,
+                                              size: 15,
+                                            ),
+                                            SizedBox(width: AppDimention.size10,),
+                                            Text(item.categoryName!,style: TextStyle(
+                                              color: item.categoryId ==
+                                                      categorySelected
+                                                  ? Colors.blue
+                                                  : Colors.amber
+                                            ),)
+                                          ],
+                                        ),
                                       ),
                                     );
                                   }),
@@ -214,11 +245,15 @@ class _HomeFolderState extends State<HomeFolder> {
                                                 SizedBox(
                                                     height:
                                                         AppDimention.size20),
-                                                Text(item.productName!,
-                                                    style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontWeight:
-                                                            FontWeight.w600)),
+                                                Text(
+                                                  item.productName!,
+                                                  style: TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w600,color: Colors.black.withOpacity(0.7)),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                                 SizedBox(
                                                     height:
                                                         AppDimention.size10),
@@ -236,7 +271,6 @@ class _HomeFolderState extends State<HomeFolder> {
                                                             if (index <
                                                                 item.averageRate!
                                                                     .floor()) {
-                                                           
                                                               return Icon(
                                                                   Icons.star,
                                                                   color: AppColor
@@ -249,7 +283,6 @@ class _HomeFolderState extends State<HomeFolder> {
                                                                 item.averageRate! %
                                                                         1 !=
                                                                     0) {
-                                                              
                                                               return Icon(
                                                                   Icons
                                                                       .star_half,
@@ -258,7 +291,6 @@ class _HomeFolderState extends State<HomeFolder> {
                                                                   size: AppDimention
                                                                       .size15);
                                                             } else {
-                                                             
                                                               return Icon(
                                                                   Icons
                                                                       .star_border,
@@ -270,7 +302,11 @@ class _HomeFolderState extends State<HomeFolder> {
                                                           }),
                                                         ),
                                                         Text(
-                                                            "(${item.averageRate})",style: TextStyle(color: Colors.red),),
+                                                          "(${item.averageRate})",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red),
+                                                        ),
                                                       ],
                                                     ),
                                                     Text(
