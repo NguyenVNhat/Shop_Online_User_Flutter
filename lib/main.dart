@@ -15,7 +15,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter_user_github/helper/dependencies.dart' as dep;
 import 'package:geolocator/geolocator.dart';
-
+// finish
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dep.init();
