@@ -78,8 +78,6 @@ class ProductController extends GetxController {
         duration: Duration(seconds: 1),
         isDismissible: true,
       );
-      Get.find<UserController>().addannouce(
-          "Thông báo giỏ hàng", "Bạn vừa thêm một sản phẩm vào giỏ hàng !");
     } else {
       print("Lỗi thêm sản phẩm vào giỏ hàng" + response.statusCode.toString());
     }
@@ -389,8 +387,6 @@ class ProductController extends GetxController {
           duration: Duration(seconds: 1),
           isDismissible: true,
         );
-        Get.find<UserController>().addannouce(
-            "Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !");
       } else if (dto.paymentMethod == "MOMO") {
         _qrcode = (MomoModels.fromJson(data).momo);
         print("PAYURRL ${_qrcode.payUrl}");
@@ -435,6 +431,7 @@ class ProductController extends GetxController {
         throw Exception("response.body không phải là kiểu hợp lệ");
       }
     } else {
+      listProductId = [];
       print("Lỗi không lấy được danh sách sản phẩm hay mua");
     }
     loadingRecommendProduct = false;

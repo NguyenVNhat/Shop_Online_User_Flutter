@@ -44,9 +44,8 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Obx(() {
                 if (!authController.IsLogin.value) {
-                  return Container(
-                    width: AppDimention.screenWidth,
-                    height: AppDimention.screenHeight - AppDimention.size60,
+                  return Expanded(
+                    
                     child: Center(
                       child: GestureDetector(
                         onTap: () {

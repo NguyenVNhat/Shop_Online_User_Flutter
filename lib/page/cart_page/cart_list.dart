@@ -26,6 +26,7 @@ class _CartListState extends State<CartList> {
   List<int> storeSelected = [];
   List<int> cartSelected = [];
   List<int> comboSelected = [];
+  int? tempStoreId;
   // Format price of product
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
@@ -389,63 +390,82 @@ class _CartListState extends State<CartList> {
                                   onChanged: (bool? value) {
                                     setState(() {
                                       isSelected[index] = value!;
+
                                       if (value) {
-                                        storeSelected.add(cartController.listcart[index].storeitem!.storeId!);
-                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length;i++) {
+                                        // Tat ca cac cua hang khac = false
+                                       for (int i = 0; i < isSelected.length; i++) {
+                                          if (i != index) {
+                                            isSelected[i] = false;
+                                          }
+                                        }
+                                        // Store được chọn là store hiện tại
+                                        storeSelected = [ cartController.listcart[index] .storeitem!.storeId! ];
+                                        tempStoreId = cartController.listcart[index] .storeitem!.storeId;
+                                        for (int i = 0; i < isProductSelected.length; i++) {
+                                         for (int j = 0; j < isProductSelected[i].length; j++) {
+                                            isProductSelected[i][j] = false;
+                                          }
+                                        }
+
+                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length; i++) {
                                           isProductSelected[index][i] = true;
-                                          if (cartController.listcart[index].cartdata![i].type =="product") {
-                                            ProductInCart? productInCart = cartController.listcart[index].cartdata![i].product;
-                                            if(!cartSelected.contains(productInCart!.productId!))
-                                            {                                       
-                                              cartController.updateTotal(productInCart.unitPrice!.toInt() * productInCart.quantity!.toInt(), true);
+
+                                          // Xét các product in cart tăng giá giỏ hàng
+                                          if (cartController.listcart[index] .cartdata![i].type == "product") {
+                                            ProductInCart? productInCart = cartController.listcart[index] .cartdata![i].product;
+                                            if (!cartSelected.contains(productInCart!.productId!)) {
+                                              cartController.updateTotal( cartController.totalprice, false);
+                                              cartController.updateTotal( productInCart.unitPrice! .toInt() * productInCart.quantity! .toInt(), true);
                                               cartSelected.add(productInCart.productId!);
                                             }
-                                          } else {
-                                            ComboInCart? comboincart =  cartController.listcart[index].cartdata![i].combo;
-                                            if(!comboSelected.contains(comboincart!.comboId!))
-                                            {
-                                                cartController.updateTotal(comboincart.unitPrice!.toInt() * comboincart.quantity!.toInt(), true);
-                                                 if(comboincart.drinkId!.length != 0)
-                                                    {
-                                                      for(int iddrink in comboincart.drinkId!){
-                                                        Productitem? drink = productController.getproductbyid(iddrink);
-                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),true);
-                                                      }
-                                                    }
-                                                comboSelected.add(comboincart.comboId!);
+                                          }
+                                          // Xét các combo in cart tăng giá giỏ hàng
+                                          else {
+                                            
+                                            ComboInCart? comboincart = cartController.listcart[index] .cartdata![i].combo;
+                                            if (!comboSelected.contains(comboincart!.comboId!)) {
+                                              cartController.updateTotal( comboincart.unitPrice! .toInt() * comboincart.quantity! .toInt(), true);
+                                              if (comboincart.drinkId!.length != 0) {
+                                                for (int iddrink in comboincart.drinkId!) {
+                                                  Productitem? drink = productController .getproductbyid( iddrink);
+                                                  cartController.updateTotal( drink!.discountedPrice != null ? drink .discountedPrice! .toInt() : drink.price! .toInt(), true);
+                                                }
+                                              }
+                                              comboSelected.add(comboincart.comboId!);
                                             }
                                           }
+                                          cartController.IDSelectedItem.clear();
                                           cartController.updateIDSelectedItem(cartController.listcart[index].cartdata![i].cartId!,true);
                                         }
+                                        cartController.IDSelectedStore.clear();
                                         cartController.updateIDSelectedStore(cartController.listcart[index].storeitem!.storeId!,true);
                                       } else {
+                                        tempStoreId = null;
                                         storeSelected.remove(cartController.listcart[index].storeitem!.storeId!);
-                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length;i++) {
+                                        for (int i = 0; i < cartController.listcart[index] .cartdata!.length; i++) {
                                           isProductSelected[index][i] = false;
-                                          if (cartController.listcart[index].cartdata![i].type =="product") {
-                                            ProductInCart? productInCart = cartController.listcart[index].cartdata![i].product;
-                                            if(cartSelected.contains(productInCart!.productId!)) 
-                                            {             
-                                              cartController.updateTotal(productInCart.unitPrice!.toInt() * productInCart.quantity!.toInt(), false);
+                                          
+                                          if (cartController.listcart[index] .cartdata![i].type == "product") {
+                                           ProductInCart? productInCart = cartController.listcart[index] .cartdata![i].product;
+                                            if (cartSelected.contains( productInCart!.productId!)) {
+                                             cartController.updateTotal( productInCart.unitPrice! .toInt() * productInCart.quantity! .toInt(), false);
                                               cartSelected.remove(productInCart.productId!);
                                             }
-                                          } 
-                                          else {
-                                            ComboInCart? comboincart =  cartController.listcart[index].cartdata![i].combo;
-                                            if(comboSelected.contains(comboincart!.comboId!))
-                                            {
-                                                cartController.updateTotal(comboincart.unitPrice!.toInt() * comboincart.quantity!.toInt(), false);
-                                                if(comboincart.drinkId!.length != 0)
-                                                    {
-                                                      for(int iddrink in comboincart.drinkId!){
-                                                        Productitem? drink = productController.getproductbyid(iddrink);
-                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),false);
-                                                      }
-                                                    }
-                                                comboSelected.remove(comboincart.comboId!);
+                                          } else {
+                                            
+                                            ComboInCart? comboincart = cartController.listcart[index] .cartdata![i].combo;
+                                            if (comboSelected.contains(comboincart!.comboId!)) {
+                                              cartController.updateTotal( comboincart.unitPrice! .toInt() * comboincart.quantity! .toInt(), false);
+                                              if (comboincart.drinkId!.length !=0) {
+                                                for (int iddrink in comboincart.drinkId!) {
+                                                 Productitem? drink = productController .getproductbyid( iddrink);
+                                                  cartController.updateTotal( drink!.discountedPrice != null ? drink .discountedPrice! .toInt() : drink.price! .toInt(), false);
+                                                }
+                                              }
+                                              comboSelected.remove(comboincart.comboId!);
                                             }
                                           }
-                                          cartController.updateIDSelectedItem(cartController.listcart[index].cartdata![i].cartId!,false);
+                                         cartController.updateIDSelectedItem(cartController.listcart[index].cartdata![i].cartId!,false);
                                         }
                                         cartController.updateIDSelectedStore(cartController.listcart[index].storeitem!.storeId!,false);
                                       }
@@ -455,7 +475,8 @@ class _CartListState extends State<CartList> {
                                 Container(
                                   width: AppDimention.size100 * 3,
                                   child: Text(
-                                    cartController.listcart[index].storeitem!.storeName!,
+                                    cartController
+                                        .listcart[index].storeitem!.storeName!,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white),
                                   ),
@@ -468,7 +489,10 @@ class _CartListState extends State<CartList> {
                             width: AppDimention.screenWidth,
                             decoration: BoxDecoration(color: Colors.grey[200]),
                             child: Column(
-                              children: cartController.listcart[index].cartdata!.asMap().entries.map((entry) {
+                              children: cartController.listcart[index].cartdata!
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
                                 int itemIndex = entry.key;
                                 var item = entry.value;
                                 ProductInCart? productInCart;
@@ -494,51 +518,102 @@ class _CartListState extends State<CartList> {
                                       child: Row(
                                         children: [
                                           Checkbox(
-                                            value: isProductSelected[index][itemIndex],
+                                            value: isProductSelected[index]
+                                                [itemIndex],
                                             onChanged: (bool? value) {
                                               setState(() {
-                                                isProductSelected[index][itemIndex] = value!;
-                                                if (value) {
+                                                if (value!) {
                                                   if (key!) {
-                                                    cartSelected.add(productInCart!.productId!);
-                                                    cartController.updateTotal(productInCart.unitPrice!.toInt() * quantity,true);
-                                                    cartController.updateIDSelectedItem(item.cartId!, true);
-                                                  } else {
-                                                    comboSelected.add(comboInCart!.comboId!);
-                                                    cartController.updateTotal(comboInCart.unitPrice!.toInt() * quantity,true);
-                                                    if(comboInCart.drinkId!.length != 0)
-                                                    {
-                                                      for(int iddrink in comboInCart.drinkId!){
-                                                        Productitem? drink = productController.getproductbyid(iddrink);
-                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),true);
+                                                    if (tempStoreId == null) {
+                                                      print("type 1");
+                                                      tempStoreId = productInCart! .storeId!;
+                                                      isProductSelected[index][itemIndex] = value;
+
+                                                      cartSelected.add(productInCart.productId!);
+                                                      cartController.updateTotal( productInCart .unitPrice! .toInt() * quantity, true);
+                                                      cartController.updateIDSelectedItem(item.cartId!,true);
+                                                    } else {
+                                                      if (productInCart! .storeId == tempStoreId) {
+                                                        print("type 2");
+                                                        isProductSelected[index][itemIndex] = value;
+                                                        cartSelected.add(productInCart.productId!);
+                                                        cartController.updateTotal( productInCart .unitPrice! .toInt() * quantity, true);
+                                                        cartController.updateIDSelectedItem(item.cartId!,true);
                                                       }
                                                     }
-                                                    cartController.updateIDSelectedCombo(item.cartId!, true);
+                                                  } else {
+                                                    
+                                                    if (tempStoreId == null) {
+                                                      print("Combo 1");
+                                                      tempStoreId = comboInCart!.storeId!;
+                                                      isProductSelected[index][itemIndex] = value;
+
+                                                      comboSelected.add(comboInCart.comboId!);
+                                                      cartController.updateTotal( comboInCart.unitPrice! .toInt() * quantity, true);
+                                                      if (comboInCart.drinkId!.length != 0) {
+                                                       for (int iddrink in comboInCart .drinkId!) {
+                                                          Productitem? drink = productController .getproductbyid( iddrink);
+                                                         cartController.updateTotal( drink!.discountedPrice != null ? drink .discountedPrice! .toInt() : drink.price! .toInt(), true);
+                                                        }
+                                                      }
+                                                      cartController.updateIDSelectedCombo(item.cartId!,true);
+                                                    }
+                                                    else{
+                                                      print("Combo 2");
+                                                      if(comboInCart!.storeId! == tempStoreId){
+                                                        isProductSelected[index][itemIndex] = value;
+
+                                                      comboSelected.remove(comboInCart.comboId!);
+                                                      cartController.updateTotal( comboInCart.unitPrice! .toInt() * quantity, true);
+                                                      if (comboInCart.drinkId! .length != 0) {
+                                                        for (int iddrink in comboInCart .drinkId!) {
+                                                          Productitem? drink = productController .getproductbyid( iddrink);
+                                                          cartController.updateTotal( drink!.discountedPrice != null ? drink .discountedPrice! .toInt() : drink.price! .toInt(), true);
+                                                        }
+                                                      }
+                                                      cartController.updateIDSelectedCombo(item.cartId!,true);
+                                                      }
+                                                    }
                                                   }
                                                 } else {
                                                   if (key!) {
+                                                    if(cartSelected.length == 1){
+                                                      tempStoreId = null;
+                                                      storeSelected = [];
+                                                    }
+
+                                                    isProductSelected[index] [itemIndex] = value;
                                                     cartSelected.remove(productInCart!.productId!);
-                                                    cartController.updateTotal(productInCart.unitPrice!.toInt() * quantity,false);
+                                                    cartController.updateTotal( productInCart.unitPrice! .toInt() * quantity, false);
                                                     cartController.updateIDSelectedItem(item.cartId!,false);
                                                   } else {
-                                                    comboSelected.remove(comboInCart!.comboId!);
-                                                    cartController.updateTotal(comboInCart.unitPrice!.toInt() * quantity,false);
-                                                    if(comboInCart.drinkId!.length != 0)
-                                                    {
-                                                      for(int iddrink in comboInCart.drinkId!){
-                                                        Productitem? drink = productController.getproductbyid(iddrink);
-                                                        cartController.updateTotal(drink!.discountedPrice != null ?drink.discountedPrice!.toInt() : drink.price!.toInt(),false);
+                                                      print("Combo 3");
+                                                      if(cartSelected.length == 1){
+                                                        tempStoreId = null;
+                                                        storeSelected = [];
                                                       }
+                                                      isProductSelected[index] [itemIndex] = value;
+                                                      comboSelected.remove(comboInCart!.comboId!);
+                                                      cartController.updateTotal( comboInCart.unitPrice! .toInt() * quantity, false);
+                                                      if (comboInCart .drinkId!.length != 0) {
+                                                        for (int iddrink in comboInCart .drinkId!) {
+                                                          Productitem? drink = productController .getproductbyid( iddrink);
+                                                          cartController.updateTotal( drink!.discountedPrice != null ? drink .discountedPrice! .toInt() : drink.price! .toInt(), false);
+                                                        }
+                                                      }
+                                                      cartController.updateIDSelectedCombo(item.cartId!,false);
                                                     }
-                                                    cartController.updateIDSelectedCombo(item.cartId!,false);
-                                                  }
                                                 }
                                               });
                                             },
                                           ),
                                           GestureDetector(
                                             onTap: () {
-                                              Get.toNamed(key! ? AppRoute.get_product_detail( productInCart!.productId!) : AppRoute.get_combo_detail(comboInCart!.comboId!));
+                                              Get.toNamed(key!
+                                                  ? AppRoute.get_product_detail(
+                                                      productInCart!.productId!)
+                                                  : AppRoute.get_combo_detail(
+                                                      comboInCart!.comboId!));
                                             },
                                             child: Container(
                                               width: AppDimention.size60,
@@ -553,7 +628,11 @@ class _CartListState extends State<CartList> {
                                                   image: DecorationImage(
                                                       fit: BoxFit.cover,
                                                       image: MemoryImage(
-                                                          base64Decode(key? productInCart!.image! : comboInCart!.image!)))),
+                                                          base64Decode(key
+                                                              ? productInCart!
+                                                                  .image!
+                                                              : comboInCart!
+                                                                  .image!)))),
                                             ),
                                           ),
                                           SizedBox(
@@ -566,7 +645,10 @@ class _CartListState extends State<CartList> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(key ? productInCart!.productName!: comboInCart!.comboName!),
+                                                Text(key
+                                                    ? productInCart!
+                                                        .productName!
+                                                    : comboInCart!.comboName!),
                                                 Text(
                                                     "Size : ${key ? productInCart!.size! : comboInCart!.size!}"),
                                                 Row(

@@ -77,12 +77,15 @@ class _StoreChatBodyState extends State<StoreChatBody> {
                                 children: [
                                   Icon(Icons.circle,color: Colors.green,size: 18,),
                                   SizedBox(width: AppDimention.size5,),
-                                  Text(
+                                  Container(
+                                    width: AppDimention.screenWidth * 0.7,
+                                    child: Text(
                                     item.storeName.toString(),
                                     style: TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 16,
                                     ),
                                   ),
+                                  )
                                 ],
                               ),
                              

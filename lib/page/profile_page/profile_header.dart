@@ -67,7 +67,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                       color: Colors.white,
                     ),
                     Text(
-                      "ID: ${usercontroller.userprofile?.id}MA04990",
+                      "ID: ${usercontroller.userprofile?.id}",
                       style: TextStyle(color: Colors.white),
                     ),
                   ],

@@ -66,8 +66,7 @@ class _HomeComboState extends State<HomeCombo> {
                                         AppDimention.size10),
                                     image: DecorationImage(
                                       fit: BoxFit.cover,
-                                      image: MemoryImage(
-                                          base64Decode(item.image!)),
+                                      image:item.image != null ?  MemoryImage(base64Decode(item.image!)) : AssetImage("assets/image/LoadingBg.png"),
                                     ),
                                   ),
                                 ),

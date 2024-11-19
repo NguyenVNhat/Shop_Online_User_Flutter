@@ -58,7 +58,7 @@ Future<void> init() async {
   Get.lazyPut(() => SizeRepo(apiClient: Get.find()));
   Get.lazyPut(() => SizeController(sizeRepo: Get.find()));
 
-  Get.lazyPut(() => ChartRepo(apiClient: Get.find()));
+  Get.lazyPut(() => ChartRepo(apiClient: Get.find(),apiclientai: Get.find()));
   Get.lazyPut(() => ChartController(chartRepo: Get.find()));
 
   Get.lazyPut(() => PromotionRepo(apiClient: Get.find()));

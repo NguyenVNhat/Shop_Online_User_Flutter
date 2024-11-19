@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_user_github/data/controller/Chart_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/page/chat_page/store_chat/AutoChat.dart';
@@ -27,8 +28,13 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
   List<Widget> listWidgets = [];
   late Quiz quiz;
   Storecontroller storecontroller = Get.find<Storecontroller>();
+  ChartController chatController = Get.find<ChartController>();
   Storesitem? storesitem;
+  TextEditingController sendController = TextEditingController();
   bool loaded = false;
+  FocusNode focusNode = FocusNode();
+  ScrollController _scrollController = ScrollController();
+  List<String> listChat = [];
 
   @override
   void initState() {
@@ -36,6 +42,22 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
     loadQuestion();
     quiz = Quiz(storeId: widget.storeid);
     loadingData();
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        print(":focus");
+        _scrollToBottom();
+      }
+    });
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void loadingData() async {
@@ -85,6 +107,17 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
       }
     }
     return Container();
+  }
+
+  void storeResponse() async {
+    if (sendController.text.isEmpty == false) {
+      listChat.add(sendController.text);
+      listChat.add((await chatController.autoResponse(
+          sendController.text, widget.storeid))!);
+    }
+    sendController.text = "";
+    _scrollToBottom();
+    setState(() {});
   }
 
   @override
@@ -169,30 +202,33 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
                     size: 20,
                   ),
                 ),
-                loaded ?
-                GestureDetector(
-                  onTap: () {
-                    Get.toNamed(
-                        AppRoute.user_chat_detail(storesitem!.managerId!));
-                  },
-                  child: Container(
-                    width: AppDimention.size100 * 2,
-                    height: AppDimention.size60,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius:
-                            BorderRadius.circular(AppDimention.size10)),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("${storesitem!.storeName}"),
-                          Text("Liên hệ chủ cửa hàng"),
-                        ],
-                      ),
-                    ),
-                  ),
-                ):Center(child: CircularProgressIndicator(),)
+                loaded
+                    ? GestureDetector(
+                        onTap: () {
+                          Get.toNamed(AppRoute.user_chat_detail(
+                              storesitem!.managerId!));
+                        },
+                        child: Container(
+                          width: AppDimention.size100 * 2,
+                          height: AppDimention.size60,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10)),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("${storesitem!.storeName}",maxLines: 1,),
+                                Text("Liên hệ chủ cửa hàng"),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: CircularProgressIndicator(),
+                      )
               ],
             ),
           ),
@@ -230,7 +266,7 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
                                       left: AppDimention.size10,
                                       right: AppDimention.size10),
                                   padding: EdgeInsets.all(AppDimention.size10),
-                                  height: AppDimention.size100 * 2.3,
+                                 
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.only(
                                           bottomLeft: Radius.circular(
@@ -305,13 +341,99 @@ class _StoreChatDetailState extends State<StoreChatDetail> {
                           : Center(
                               child: CircularProgressIndicator(),
                             ),
-                      Column(
-                        children: combinedList,
-                      ),
+                      Column(children: [
+                        Column(children: combinedList),
+                        Column(
+                          children: listChat.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            String item = entry.value;
+
+                            return Container(
+                              width: Get.width * 0.9,
+                              padding: EdgeInsets.all(10),
+                              margin: EdgeInsets.only(top: 10),
+                              decoration: BoxDecoration(
+                                color:
+                                    index % 2 == 0 ? Colors.red : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                item,
+                                style: TextStyle(
+                                    color: index % 2 == 0
+                                        ? Colors.white
+                                        : Colors.black),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ]),
                     ],
                   )),
             ),
           ),
+          Container(
+              width: AppDimention.screenWidth,
+              decoration: BoxDecoration(
+                color: Colors.white,
+              ),
+              padding: EdgeInsets.only(
+                  bottom: AppDimention.size10, top: AppDimention.size10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: AppDimention.size10,
+                      ),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius:
+                                BorderRadius.circular(AppDimention.size5),
+                          ),
+                          padding: EdgeInsets.only(
+                              left: AppDimention.size10,
+                              right: AppDimention.size10),
+                          child: TextField(
+                            controller: sendController,
+                            focusNode: focusNode,
+                            maxLines: null,
+                            decoration: InputDecoration(
+                              hintText: "Chart ...",
+                              hintStyle: TextStyle(color: Colors.black12),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.transparent),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.transparent),
+                              ),
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: AppDimention.size10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: AppDimention.size10,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          storeResponse();
+                        },
+                        child: Icon(Icons.send, color: Colors.amber),
+                      ),
+                      SizedBox(
+                        width: AppDimention.size10,
+                      ),
+                    ],
+                  ),
+                ],
+              ))
         ],
       ),
     );

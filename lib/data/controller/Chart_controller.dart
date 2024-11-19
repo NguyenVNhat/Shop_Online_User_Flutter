@@ -3,6 +3,7 @@ import 'package:flutter_user_github/models/Model/ChartModel.dart';
 import 'package:flutter_user_github/models/Model/Messagemodel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
 import 'package:flutter_user_github/models/Model/Userchatmodel.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ChartController extends GetxController implements GetxService {
@@ -111,7 +112,7 @@ class ChartController extends GetxController implements GetxService {
       print("Save image successfully");
     }
     else{
-      print("Save image failed");
+      print("Save image failed ");
     }
   }
 
@@ -123,6 +124,28 @@ class ChartController extends GetxController implements GetxService {
   void updatechartname(String newvalue){
     chartname = newvalue;
     update();
+  }
+  Future<String?> autoResponse(String question,int storeId) async{
+    Response response = await chartRepo.autoResponse(question, storeId);
+    if(response.statusCode == 200){
+      var data = response.body;
+
+      return data as String;
+    }
+    else{
+      Get.snackbar(
+        "Bảo trì",
+        "Chức năng này đang bảo trì. Vui lòng thử lại sau",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: Colors.black,
+        icon: Icon(Icons.warning, color: Colors.red),
+        borderRadius: 10,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 1),
+        isDismissible: true,
+      );
+    }
   }
 
   

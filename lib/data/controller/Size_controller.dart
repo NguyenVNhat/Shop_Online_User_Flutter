@@ -29,6 +29,13 @@ class SizeController extends GetxController {
     _isLoading = false;
     update();
   }
+  int? getbyname(String name){
+    for(Size item in _sizelist){
+      if(item.name == name){
+        return item.id!;
+      }
+    }
+  }
 
   String sizename = "";
   String get getsizename => sizename;

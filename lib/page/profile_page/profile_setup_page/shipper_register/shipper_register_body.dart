@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Dto/RegisterShipperDto.dart';
 import 'package:flutter_user_github/page/profile_page/profile_setup_page/shipper_register/shipper_register_finish.dart';
@@ -38,6 +39,30 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
   TextEditingController VehicleNumberController = TextEditingController();
   TextEditingController VehicleLicenseController = TextEditingController();
   TextEditingController VehicleStyleController = TextEditingController();
+  TextEditingController citizenID = TextEditingController();
+
+  String? selectedProvince;
+  List<String> provinces = [];
+  String? selectedDistrict;
+  List<String> districts = [];
+  FunctionMap functionMap = FunctionMap();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadProvince();
+  }
+
+  void loadProvince() async {
+    provinces = await functionMap.listProvinces();
+    setState(() {});
+  }
+
+  void loadDistrict() async {
+    districts = await functionMap.listDistrict(selectedProvince!);
+    print(districts);
+    setState(() {});
+  }
 
   File? _imageCCCD1;
   Future<void> _pickImage() async {
@@ -79,16 +104,29 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
         phoneController.text.isEmpty ||
         emailController.text.isEmpty ||
         birthdayController.text.isEmpty ||
-        currentDistrictController.text.isEmpty ||
-        currentDistrictController.text.isEmpty ||
-        currentHomeNumberController.text.isEmpty ||
-        ProvinceController.text.isEmpty ||
-        DistrictController.text.isEmpty ||
-        HomeNumberController.text.isEmpty) {
+        selectedDistrict == null ||
+        selectedProvince == null ||
+        currentHomeNumberController.text.isEmpty) {
       setState(() {
         annountfirst = "Vui lòng nhập đủ thông tin";
       });
       return false;
+    } else {
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      final phoneRegex = RegExp(r'^(0|\+84)(3|5|7|8|9)\d{8}$');
+
+      if (!emailRegex.hasMatch(emailController.text)) {
+        setState(() {
+          annountfirst = "Email không hợp lệ";
+        });
+        return false;
+      }
+      if (!phoneRegex.hasMatch(phoneController.text)) {
+        setState(() {
+          annountfirst = "Số điện thoại không hợp lệ";
+        });
+        return false;
+      }
     }
     return true;
   }
@@ -96,7 +134,10 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
   bool checkValidate_second() {
     if (_imageCCCD1 == null ||
         _imageCCCD2 == null ||
-        VehicleNumberController.text.isEmpty || VehicleLicenseController.text.isEmpty || VehicleStyleController.text.isEmpty) {
+        VehicleNumberController.text.isEmpty ||
+        VehicleLicenseController.text.isEmpty ||
+        citizenID.text.isEmpty ||
+        VehicleStyleController.text.isEmpty) {
       setState(() {
         annountsecond = "Vui lòng nhập đủ thông tin";
       });
@@ -104,33 +145,25 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
     }
     return true;
   }
+
   Future<String> convertImageToBase64(File imageFile) async {
-  List<int> imageBytes = await imageFile.readAsBytes(); 
-  String base64Image = base64Encode(imageBytes); 
-  return base64Image;
-}
-  void _register() async{
+    List<int> imageBytes = await imageFile.readAsBytes();
+    String base64Image = base64Encode(imageBytes);
+    return base64Image;
+  }
+
+  void _register() async {
     if (!_isChecked) {
       setState(() {
         annountthird = "Vui lòng xác nhận điều khoản";
       });
     } else {
-      
       String fullName =
           firstnameController.text + " " + lastnameController.text;
       String phone = phoneController.text;
       String email = emailController.text;
       String birthday = birthdayController.text;
-      String currentaddress = currentHomeNumberController.text +
-          " - " +
-          currentDistrictController.text +
-          " - " +
-          currentProvinceController.text;
-      String address = HomeNumberController.text +
-          " - " +
-          DistrictController.text +
-          " - " +
-          ProvinceController.text;
+      String address = selectedProvince.toString()+", "+selectedDistrict.toString()+", "+HomeNumberController.text;
 
       String vehilclenumber = VehicleNumberController.text;
       String vehiclelicense = VehicleLicenseController.text;
@@ -139,27 +172,35 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
       File? image1 = _imageCCCD1!;
       String imageFront = "";
       if (image1 != null) {
-        imageFront = await convertImageToBase64(image1); 
+        imageFront = await convertImageToBase64(image1);
       } else {
         print("Không có hình ảnh để chuyển đổi.");
       }
       File? image2 = _imageCCCD2!;
-        String imageBack = "";
+      String imageBack = "";
       if (image2 != null) {
-         imageBack = await convertImageToBase64(image2); 
+        imageBack = await convertImageToBase64(image2);
       } else {
         print("Không có hình ảnh để chuyển đổi.");
       }
-    
-      print(fullName);
-      Registershipperdto dto = Registershipperdto(name: fullName, imageCitizenFront: imageFront, imageCitizenBack: imageBack, email: email, phone: phone, currentaddress: currentaddress, address: address, birthday: birthday, vehicle: vehiclestyle, licensePlate: vehilclenumber, DriverLicense: vehiclelicense);
+      Registershipperdto dto = Registershipperdto(
+          name: fullName,
+          citizenID: citizenID.text,
+          imageCitizenFront: imageFront,
+          imageCitizenBack: imageBack,
+          email: email,
+          phone: phone,
+          address: address,
+          birthday: birthday,
+          vehicle: vehiclestyle,
+          licensePlate: vehilclenumber,
+          DriverLicense: vehiclelicense);
       UserController userController = Get.find<UserController>();
-      userController.registershipper(dto).then((status){
-        if(status){
-            Get.to(ShipperRegisterFinish());
-        }
-        else{
-           Get.snackbar(
+      userController.registershipper(dto).then((status) {
+        if (status) {
+          Get.to(ShipperRegisterFinish());
+        } else {
+          Get.snackbar(
             "Thông báo",
             "Đăng kí thất bại",
             snackPosition: SnackPosition.TOP,
@@ -170,79 +211,11 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
             margin: EdgeInsets.all(10),
             duration: Duration(seconds: 1),
             isDismissible: true,
-            
           );
         }
-      }
-    );
-
-      
+      });
     }
   }
-
-  List<String> provinces = [
-    'Hà Nội',
-    'Hồ Chí Minh',
-    'Đà Nẵng',
-    'Hải Phòng',
-    'Cần Thơ',
-    'Nghệ An',
-    'Thanh Hóa',
-    'Đồng Nai',
-    'Bình Dương',
-    'Khánh Hòa',
-    'Thừa Thiên Huế',
-    'An Giang',
-    'Bà Rịa-Vũng Tàu',
-    'Bắc Ninh',
-    'Nam Định',
-    'Vĩnh Long',
-    'Bắc Giang',
-    'Hưng Yên',
-    'Hà Nam',
-    'Quảng Ninh',
-    'Đắk Lắk',
-    'Gia Lai',
-    'Ninh Bình',
-    ' Hà Tĩnh',
-    'Quảng Nam',
-    'Thái Bình',
-    'Kiên Giang',
-    'Sóc Trăng',
-    'Lâm Đồng',
-    'Tây Ninh',
-    'Bến Tre',
-    'Long An',
-    'Bình Thuận',
-    'Hòa Bình',
-    'Lạng Sơn',
-    'Yên Bái',
-    'Cao Bằng',
-    'Điện Biên',
-    'Lào Cai',
-    'Sơn La',
-    'Tuyên Quang',
-    'Thái Nguyên',
-    'Hà Giang',
-    'Quảng Trị',
-    'Kon Tum',
-    'Ninh Thuận',
-    'Bắc Kạn',
-    'Hà Tĩnh',
-    'Đắk Nông',
-    'Hải Dương',
-    'Hưng Yên',
-    'Phú Thọ',
-    'Vĩnh Phúc',
-    'Nam Định',
-    'Thái Bình',
-    'Bắc Giang',
-    'Đồng Tháp',
-    'Hậu Giang',
-    'Trà Vinh',
-    'Bạc Liêu',
-    'Cà Mau',
-  ];
 
   List<int> listfinish = [];
   @override
@@ -511,14 +484,14 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                     "Địa chỉ hiện tại",
                     style: TextStyle(fontSize: 16),
                   ),
-                  Row(
+                  Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: AppDimention.screenWidth / 2.1,
+                            width: AppDimention.screenWidth,
                             height: AppDimention.size50,
                             decoration: BoxDecoration(
                                 color: Colors.white,
@@ -526,14 +499,12 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                                     bottom: BorderSide(
                                         width: 1, color: Colors.black26))),
                             child: DropdownButtonFormField<String>(
-                              value: provinces
-                                      .contains(currentProvinceController.text)
-                                  ? currentProvinceController.text
-                                  : null,
+                              value: selectedProvince,
                               onChanged: (String? newValue) {
                                 setState(() {
                                   if (newValue != null) {
-                                    currentProvinceController.text = newValue;
+                                    selectedProvince = newValue;
+                                    loadDistrict();
                                   }
                                 });
                               },
@@ -543,7 +514,6 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                                   color: Colors.black26,
                                   fontSize: 14,
                                 ),
-                               
                                 isDense: true,
                                 contentPadding: EdgeInsets.symmetric(
                                   vertical: AppDimention.size10,
@@ -580,32 +550,37 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                           ),
                         ],
                       ),
+                      SizedBox(
+                        height: 10,
+                      ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: AppDimention.screenWidth / 2.2,
+                            width: AppDimention.screenWidth,
+                            height: AppDimention.size50,
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border(
-                                bottom:
-                                    BorderSide(width: 1, color: Colors.black26),
-                              ),
-                            ),
-                            child: TextField(
-                              controller: currentDistrictController,
+                                color: Colors.white,
+                                border: Border(
+                                    bottom: BorderSide(
+                                        width: 1, color: Colors.black26))),
+                            child: DropdownButtonFormField<String>(
+                              value: selectedDistrict,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedDistrict = newValue;
+                                });
+                              },
                               decoration: InputDecoration(
-                                hintText: "Quận/ huyện",
-                                prefixIcon:
-                                    Icon(Icons.location_searching_sharp),
+                                hintText: "Quận / huyện",
+                                hintStyle: TextStyle(
+                                  color: Colors.black26,
+                                  fontSize: 14,
+                                ),
                                 isDense: true,
                                 contentPadding: EdgeInsets.symmetric(
                                   vertical: AppDimention.size10,
                                   horizontal: AppDimention.size10,
-                                ),
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                  fontSize: 14,
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(
@@ -621,13 +596,24 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
+                                      AppDimention.size10),
                                 ),
                               ),
+                              items: districts.map<DropdownMenuItem<String>>(
+                                  (String value) {
+                                print(value);
+                                return DropdownMenuItem<String>(
+                                  value: value.toString(),
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                   SizedBox(
@@ -649,176 +635,8 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                           decoration: InputDecoration(
                             prefixIcon: Icon(Icons.location_on_outlined),
                             hintText: "Số nhà / đường",
-                            hintStyle: TextStyle(color: Colors.black26,fontSize: 14),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: AppDimention.size10,
-                              horizontal: AppDimention.size10,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppDimention.size30),
-                                borderSide: BorderSide(
-                                    width: 1.0, color: Colors.white)),
-                            enabledBorder: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppDimention.size30),
-                                borderSide: BorderSide(
-                                    width: 1.0, color: Colors.white)),
-                            border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppDimention.size30),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: AppDimention.size20,
-                  ),
-                  Text(
-                    "Quê quán",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: AppDimention.screenWidth / 2.2,
-                            height: AppDimention.size50,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border(
-                                    bottom: BorderSide(
-                                        width: 1, color: Colors.black26))),
-                            child: DropdownButtonFormField<String>(
-                              value: provinces.contains(ProvinceController.text)
-                                  ? ProvinceController.text
-                                  : null,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  if (newValue != null) {
-                                    ProvinceController.text = newValue;
-                                  }
-                                });
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Tỉnh",
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                  fontSize: 14,
-                                ),
-                               
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: AppDimention.size10,
-                                  horizontal: AppDimention.size10,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size10),
-                                ),
-                              ),
-                              items: provinces.map<DropdownMenuItem<String>>(
-                                  (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: AppDimention.screenWidth / 2.2,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border(
-                                bottom:
-                                    BorderSide(width: 1, color: Colors.black26),
-                              ),
-                            ),
-                            child: TextField(
-                              controller: DistrictController,
-                              decoration: InputDecoration(
-                                hintText: "Quận/ huyện",
-                                prefixIcon:
-                                    Icon(Icons.location_searching_sharp),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: AppDimention.size10,
-                                  horizontal: AppDimention.size10,
-                                ),
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                  fontSize: 14,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: AppDimention.size15,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: AppDimention.screenWidth,
-                        height: AppDimention.size50,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border(
-                                bottom: BorderSide(
-                                    width: 1, color: Colors.black26))),
-                        child: TextField(
-                          controller: HomeNumberController,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(Icons.location_on_outlined),
-                            hintText: "Số nhà / đường",
-                            hintStyle: TextStyle(color: Colors.black26,fontSize: 14,),
+                            hintStyle:
+                                TextStyle(color: Colors.black26, fontSize: 14),
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                               vertical: AppDimention.size10,
@@ -850,7 +668,7 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Ngày sinh",
+                        "Tuổi",
                         style: TextStyle(fontSize: 16),
                       ),
                       Container(
@@ -861,49 +679,29 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                             border: Border(
                                 bottom: BorderSide(
                                     width: 1, color: Colors.black26))),
-                        child: GestureDetector(
-                          onTap: () async {
-                            DateTime? selectedDate = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime.now(),
-                            );
-                            if (selectedDate != null) {
-                              setState(() {
-                                birthdayController.text =
-                                    "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
-                              });
-                            }
-                          },
-                          child: AbsorbPointer(
-                            child: TextField(
-                              controller: birthdayController,
-                              decoration: InputDecoration(
-                                prefixIcon: Icon(Icons.date_range),
-                                hintStyle: TextStyle(color: Colors.black26),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: AppDimention.size10,
-                                  horizontal: AppDimention.size10,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                      width: 1.0, color: Colors.white),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                ),
-                              ),
+                        child: TextField(
+                          controller: birthdayController,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(Icons.phone),
+                            hintStyle: TextStyle(color: Colors.black26),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: AppDimention.size10,
+                              horizontal: AppDimention.size10,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size30),
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.white)),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size30),
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.white)),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
                             ),
                           ),
                         ),
@@ -927,11 +725,10 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                     onTap: () {
                       setState(() {
                         if (checkValidate_first()) {
-                           if (!listfinish.contains(titleSelected))
-                          listfinish.add(titleSelected);
+                          if (!listfinish.contains(titleSelected))
+                            listfinish.add(titleSelected);
                           titleSelected = titleSelected + 1;
                         }
-                       
                       });
                     },
                     child: Container(
@@ -988,7 +785,6 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                       ],
                     ),
                   ),
-                 
                   Container(
                     width: AppDimention.screenWidth,
                     height: AppDimention.size100 * 3,
@@ -1017,6 +813,55 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                         )
                       ],
                     ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("CCCD"),
+                      Container(
+                        width: AppDimention.screenWidth,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(width: 1, color: Colors.black26),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: citizenID,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(Icons.location_searching_sharp),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: AppDimention.size10,
+                              horizontal: AppDimention.size10,
+                            ),
+                            hintStyle: TextStyle(
+                              color: Colors.black26,
+                              fontSize: 15,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: AppDimention.size20,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1064,7 +909,7 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                       ),
                     ],
                   ),
-                   SizedBox(
+                  SizedBox(
                     height: AppDimention.size20,
                   ),
                   Column(
@@ -1113,7 +958,7 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                       ),
                     ],
                   ),
-                   SizedBox(
+                  SizedBox(
                     height: AppDimention.size20,
                   ),
                   Column(
@@ -1196,7 +1041,7 @@ class _ShipperRegisterBodyState extends State<ShipperRegisterBody> {
                             if (checkValidate_second()) {
                               setState(() {
                                 if (!listfinish.contains(titleSelected))
-                                listfinish.add(titleSelected);
+                                  listfinish.add(titleSelected);
                                 titleSelected = titleSelected + 1;
                               });
                             }

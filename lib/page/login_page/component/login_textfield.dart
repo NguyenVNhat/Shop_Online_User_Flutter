@@ -46,7 +46,7 @@ class _LoginTextfieldState extends State<LoginTextfield> {
         children: [
           Text(
             title!,
-            style: TextStyle(color: Colors.black54, fontSize: 18),
+            style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           SizedBox(height: AppDimention.size10),
           type == 1
@@ -57,14 +57,15 @@ class _LoginTextfieldState extends State<LoginTextfield> {
                     horizontal: AppDimention.size20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
                     controller: controller,
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: "......",
-                      hintStyle: TextStyle(color: Colors.black26, fontSize: 13),
+                      hintText: "............",
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                           vertical: AppDimention.size15),
@@ -88,7 +89,7 @@ class _LoginTextfieldState extends State<LoginTextfield> {
                   padding: EdgeInsets.symmetric(
                       horizontal: AppDimention.size10),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -100,10 +101,10 @@ class _LoginTextfieldState extends State<LoginTextfield> {
                         child: TextField(
                           obscureText: isShow, 
                           controller: controller,
+                          style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: "......",
-                            hintStyle:
-                                TextStyle(color: Colors.black26, fontSize: 13),
+                            hintText: "............",
+                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                                 vertical: AppDimention.size15),
@@ -138,6 +139,7 @@ class _LoginTextfieldState extends State<LoginTextfield> {
                           isShow
                               ? Icons.visibility 
                               : Icons.visibility_off, 
+                          color: Colors.white,
                         ),
                       ),
                     ],

@@ -23,6 +23,9 @@ class AuthRepo {
   Future<Response> register(Userregisterdto dto) async {
     return await apiClient.postData(Appconstant.REGISTER_URL, dto.toJson());
   }
+  Future<Response> changepassword(String oldPassword,String newpassword) async {
+    return await apiClient.postData(Appconstant.CHANGEPASSWORD_URL.replaceFirst("{oldPassword}", oldPassword).replaceFirst("{newpassword}", newpassword), null);
+  }
 
   Future<Response> sendotp(String email) async {
     return await apiClient

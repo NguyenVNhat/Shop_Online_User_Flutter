@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileCamera extends StatefulWidget {
   const ProfileCamera({
@@ -42,7 +43,31 @@ class ProfileCameraState extends State<ProfileCamera>
     cameraController?.dispose();
     super.dispose();
   }
-
+  bool isPicking = false;
+  Future<void> _pickImage() async {
+    if (isPicking) return;
+    setState(() {
+      isPicking = true;
+    });
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        File imageFile = File(pickedFile.path);
+        List<int> imageBytes = await imageFile.readAsBytes();
+        String base64Image = base64Encode(imageBytes);
+        Get.find<UserController>().updateAvatar(base64Image);
+          Get.back();
+       
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    } finally {
+      setState(() {
+        isPicking = false;
+      });
+    }
+  }
   Future<void> _setupCameraController() async {
     List<CameraDescription> _camera = await availableCameras();
     if (_camera.isNotEmpty) {
@@ -127,7 +152,7 @@ class ProfileCameraState extends State<ProfileCamera>
                   ),
                 ),
                 Positioned(
-                  top: 10,
+                  top: 20,
                   left: 10,
                   child: GestureDetector(
                     onTap: () {
@@ -136,7 +161,21 @@ class ProfileCameraState extends State<ProfileCamera>
                     child: Icon(
                       Icons.arrow_circle_left,
                       size: 50,
-                      color: AppColor.mainColor,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  right: 10,
+                  child: GestureDetector(
+                    onTap: () {
+                      _pickImage();
+                    },
+                    child: Icon(
+                      Icons.image,
+                      size: 50,
+                      color: Colors.white,
                     ),
                   ),
                 ),

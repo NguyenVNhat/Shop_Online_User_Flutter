@@ -1,45 +1,44 @@
-import 'dart:convert';
-import 'package:flutter_user_github/caculator/function.dart';
-import 'package:flutter_user_github/data/controller/Combo_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Combo_controller.dart';
 import 'package:flutter_user_github/data/controller/Store_Controller.dart';
-import 'package:flutter_user_github/models/Dto/AddComboToCartDto.dart';
-import 'package:flutter_user_github/models/Model/Item/ComboItem.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
+import 'package:flutter_user_github/models/Dto/AddComboToCartDto.dart';
+import 'package:flutter_user_github/models/Model/Item/ComboItem.dart';
+import 'package:flutter_user_github/theme/app_dimention.dart';
+import 'package:flutter_user_github/blocs/QuantityBlocs.dart';
+import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
-import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
 
 class ComboDetail extends StatefulWidget {
   final int comboId;
   const ComboDetail({Key? key, required this.comboId}) : super(key: key);
-
   @override
   _ComboDetailState createState() => _ComboDetailState();
 }
 
 class _ComboDetailState extends State<ComboDetail> {
-  int selectSize = 1;
-
   ProductController productController = Get.find<ProductController>();
   Storecontroller storecontroller = Get.find<Storecontroller>();
   ComboController comboController = Get.find<ComboController>();
+  QuantityBloc quantityBloc = QuantityBloc();
   FunctionMap functionMap = FunctionMap();
-  bool? isloadedData = false;
   List<int> listDrinkSelected = [];
-  int? drinkprice = 0;
-  int quantity = 1;
-  bool? isLoadPoint = false;
-  Point? currentPoint;
-  List<int>? groupValue = [];
-  int? comboprice;
-  List<Productitem>? listdrink;
-  Comboitem? comboitem;
   List<Storesitem>? commonStores;
-
+  List<Productitem>? listdrink;
+  bool? isloadedData = false;
+  List<int>? groupValue = [];
+  bool? isLoadPoint = false;
+  Comboitem? comboitem;
+  int? drinkprice = 0;
+  Point? currentPoint;
+  int selectSize = 1;
+  int quantity = 1;
+  int? comboprice;
   @override
   void initState() {
     super.initState();
@@ -49,7 +48,6 @@ class _ComboDetailState extends State<ComboDetail> {
 
   void loadData() async {
     comboitem = comboController.getcombobyId(widget.comboId);
-
     commonStores = storecontroller.getCommonStores(comboitem!.products!);
     while (storecontroller.getloadingCommonStore) {
       await Future.delayed(const Duration(milliseconds: 50));
@@ -101,7 +99,7 @@ class _ComboDetailState extends State<ComboDetail> {
   // Add combo to cart
   void addtoCart(int storeId) {
     int comboId = widget.comboId;
-    int quantityCombo = quantity;
+    int quantityCombo = quantityBloc.getQuantity();
     int storeIdSelected = storeId;
     List<int> drinkId = listDrinkSelected;
 
@@ -131,60 +129,130 @@ class _ComboDetailState extends State<ComboDetail> {
                   Navigator.pop(context);
                 },
                 child: Container(
-                  width: AppDimention.screenWidth,
-                  padding: EdgeInsets.only(
-                      left: AppDimention.size10,
-                      right: AppDimention.size10,
-                      top: AppDimention.size20,
-                      bottom: AppDimention.size20),
-                  decoration: BoxDecoration(
+                    width: AppDimention.screenWidth,
+                    padding: EdgeInsets.only(
+                        left: AppDimention.size10,
+                        right: AppDimention.size10,
+                        top: AppDimention.size20,
+                        bottom: AppDimention.size20),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(
-                          bottom: BorderSide(width: 1, color: Colors.black26))),
-                  child: Row(
-                    children: [
-                      Column(
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.only(left: AppDimention.size10),
+                      width: AppDimention.screenWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Colors.blue,
+                          Row(
+                            children: [
+                              Icon(Icons.location_on, color: Colors.blue),
+                              Text(
+                                "${(functionMap.calculateDistance(items[index].latitude!, items[index].longitude!, isLoadPoint! ? currentPoint!.latitude! : 0, isLoadPoint! ? currentPoint!.longtitude! : 0) / 1000).toInt()}km",
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.blue),
+                              )
+                            ],
                           ),
-                          Text(
-                            "${(functionMap.calculateDistance(items[index].latitude!, items[index].longitude!, isLoadPoint! ? currentPoint!.latitude! : 0, isLoadPoint! ? currentPoint!.longtitude! : 0) / 1000).toInt()} ",
-                            style: TextStyle(color: Colors.blue),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.store,
+                                    color: AppColor.mainColor,
+                                  ),
+                                  Container(
+                                    width: AppDimention.screenWidth * 0.7,
+                                    child: Text(
+                                      "${items[index].storeName!}",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          color: AppColor.mainColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ],
                           ),
-                          Text(
-                            "( km )",
-                            style: TextStyle(color: Colors.blue),
-                          )
+                          
+                          SizedBox(
+                            height: AppDimention.size5,
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.phone,
+                                color: AppColor.mainColor,
+                                size: 15,
+                              ),
+                              SizedBox(
+                                width: AppDimention.size10,
+                              ),
+                              Text(
+                                "${items[index].numberPhone!}",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColor.mainColor),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.timelapse_rounded,
+                                color: AppColor.mainColor,
+                                size: 15,
+                              ),
+                              SizedBox(
+                                width: AppDimention.size10,
+                              ),
+                              Text(
+                                "${functionMap.formatTime(items[index].openingTime!) + " AM - " + functionMap.formatTime(items[index].closingTime!)} PM",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColor.mainColor),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.store,
+                                color: AppColor.mainColor,
+                                size: 15,
+                              ),
+                              SizedBox(
+                                width: AppDimention.size10,
+                              ),
+                              Container(
+                                width: AppDimention.screenWidth * 0.8,
+                                child: Text(
+                                  "${items[index].location!}",
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColor.mainColor),
+                                ),
+                              )
+                            ],
+                          ),
                         ],
                       ),
-                      Container(
-                        margin: EdgeInsets.only(left: AppDimention.size10),
-                        width: AppDimention.screenWidth * 0.7,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              items[index].storeName!,
-                              textAlign: TextAlign.justify,
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox(
-                              height: AppDimention.size5,
-                            ),
-                            Text(
-                              items[index].location!,
-                              textAlign: TextAlign.justify,
-                              style: TextStyle(color: Colors.black45),
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+                    )),
               );
             },
           ),
@@ -323,6 +391,7 @@ class _ComboDetailState extends State<ComboDetail> {
                                 ],
                               ),
                             ),
+                            if(listdrink!.length > 0)
                             Column(
                               children: listdrink!.map((item) {
                                 // Check if the current item is selected
@@ -450,21 +519,29 @@ class _ComboDetailState extends State<ComboDetail> {
                               ]);
                             }).toList(),
                           ),
-                          Center(
-                            child: Text(
-                              "đ${_formatNumber(comboitem!.price!.toInt() * quantity + drinkprice!)}",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black38,
-                                shadows: [
-                                  Shadow(
-                                      blurRadius: AppDimention.size10,
-                                      offset: Offset(2.0, 2.0),
-                                      color: Colors.amber)
-                                ],
-                              ),
-                            ),
-                          ),
+                          StreamBuilder(
+                              stream: quantityBloc.quantityStream,
+                              builder: (context, snapshot) {
+                                int quantity = 1;
+                                if (snapshot.hasData) {
+                                  quantity = snapshot.data!;
+                                }
+                                return Center(
+                                  child: Text(
+                                    "đ${_formatNumber(comboitem!.price!.toInt() * quantity + drinkprice!)}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black38,
+                                      shadows: [
+                                        Shadow(
+                                            blurRadius: AppDimention.size10,
+                                            offset: Offset(2.0, 2.0),
+                                            color: Colors.amber)
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
                           Container(
                             width: AppDimention.screenWidth * 0.55,
                             child: Row(
@@ -472,23 +549,23 @@ class _ComboDetailState extends State<ComboDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    setState(() {
-                                      if (quantity > 1) {
-                                        quantity = quantity - 1;
-                                      }
-                                    });
+                                    quantityBloc.decrement();
                                   },
                                   child:
                                       Icon(Icons.remove_circle_outline_sharp),
                                 ),
-                                Text("${quantity}"),
+                                StreamBuilder(
+                                    stream: quantityBloc.quantityStream,
+                                    builder: (context, snapshot) {
+                                      int quantity = 1;
+                                      if (snapshot.hasData) {
+                                        quantity = snapshot.data!;
+                                      }
+                                      return Text("${quantity}");
+                                    }),
                                 GestureDetector(
                                   onTap: () {
-                                    setState(() {
-                                      if (quantity < 10) {
-                                        quantity = quantity + 1;
-                                      }
-                                    });
+                                    quantityBloc.increment();
                                   },
                                   child: Icon(Icons.add_circle_outline_sharp),
                                 ),
@@ -560,7 +637,8 @@ class _ComboDetailState extends State<ComboDetail> {
                           onTap: () {
                             setState(() {
                               drinkprice = 0;
-                              groupValue = null;
+                              groupValue!.clear();
+                              listDrinkSelected.clear();
                             });
                           },
                           child: Container(
@@ -583,8 +661,10 @@ class _ComboDetailState extends State<ComboDetail> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Get.toNamed(AppRoute.orderCombo(comboitem!.comboId!,
-                                groupValue!.length == 0 ? [0] : groupValue!));
+                            Get.toNamed(AppRoute.orderCombo(
+                                comboitem!.comboId!,
+                                groupValue!.length == 0 ? [0] : groupValue!,
+                                quantityBloc.getQuantity()));
                           },
                           child: Container(
                             width: AppDimention.screenWidth * 0.5,

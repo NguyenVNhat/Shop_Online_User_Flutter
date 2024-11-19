@@ -4,6 +4,7 @@ import 'package:flutter_user_github/data/service/AnnounceCheckService.dart';
 import 'package:flutter_user_github/models/Dto/UserDto.dart';
 import 'package:flutter_user_github/models/Dto/UserRegisterDto.dart';
 import 'package:flutter_user_github/route/app_route.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class AuthController extends GetxController implements GetxService {
@@ -131,6 +132,37 @@ class AuthController extends GetxController implements GetxService {
       return true;
     } else {
       return false;
+    }
+  }
+  Future<void> changepassword(String oldPassword,String newPassword) async{
+    Response response = await authRepo.changepassword(oldPassword, newPassword);
+    if(response.statusCode == 200){
+       Get.snackbar(
+            "Thông báo",
+            "Đổi mật khẩu thành công",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.warning_rounded, color: Colors.green),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+          );
+    }
+    else{
+      Get.snackbar(
+            "Thông báo",
+            "Đổi mật khẩu thất bại ${response.body['message']}",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.white,
+            colorText: Colors.black,
+            icon: Icon(Icons.warning_rounded, color: Colors.red),
+            borderRadius: 10,
+            margin: EdgeInsets.all(10),
+            duration: Duration(seconds: 1),
+            isDismissible: true,
+          );
     }
   }
 

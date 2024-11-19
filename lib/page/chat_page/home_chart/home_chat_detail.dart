@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_user_github/data/api/AppConstant.dart';
 import 'package:flutter_user_github/data/controller/Chart_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Model/ChartModel.dart';
 import 'package:flutter_user_github/models/Model/Messagemodel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
+import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_color.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +27,7 @@ class HomeChatDetail extends StatefulWidget {
 }
 
 class _HomeChatDetailState extends State<HomeChatDetail> {
-   List<Usermessage> listchart = [];
+  List<Usermessage> listchart = [];
   late ChartController chatController = Get.find<ChartController>();
   TextEditingController sendController = TextEditingController();
   late UserController userController = Get.find<UserController>();
@@ -41,6 +43,8 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
   late IOWebSocketChannel _channel;
   StreamSubscription? _subscription;
 
+  bool isPicking = false;
+  bool haveImage = false;
   @override
   void initState() {
     super.initState();
@@ -50,7 +54,7 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
       ..badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
     _channel = IOWebSocketChannel.connect(
-      Uri.parse('ws://192.168.1.39:8080/ws/chat'),
+      Uri.parse('ws://${Appconstant.IP}:${Appconstant.PORT}/ws/chat'),
       customClient: client,
     );
     startSessionSocket();
@@ -58,7 +62,9 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
     _subscription = _channel.stream.listen((message) {
       setState(() {
         var decodedMessage = jsonDecode(message);
-        listchart.add(Usermessage.fromJson(decodedMessage));
+        //if(decodedMessage["type"] =="sendMessage")
+            listchart.add(Usermessage.fromJson(decodedMessage));
+        
       });
       print("Tin nhắn nhận được: $message");
       _scrollToBottom();
@@ -84,9 +90,9 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
   Future<void> loadData(int idreceiver) async {
     setState(() {
       loaded = false;
-      listchart.clear(); 
+      listchart.clear();
     });
-    
+
     user1 = userController.userprofile;
     await chatController.getlistmessage(idreceiver);
     user2 = await userController.getbyid(idreceiver);
@@ -95,16 +101,13 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
     while (chatController.getisLoadingMessage || userController.loadreceiver!) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    
+
     setState(() {
       listchart = chatController.getlistusermesage;
       loaded = true;
     });
     _scrollToBottom();
   }
-
-  bool isPicking = false;
-  bool haveImage = false;
 
   Future<void> _pickImage() async {
     if (isPicking) return;
@@ -135,25 +138,43 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
 
   void _sendMessage() {
     String message = sendController.text.trim();
-    if (message.isNotEmpty) {
+    if (imagebase64.isEmpty == false) {
+      final data = {
+        "sender": user1!.id,
+        "receiver": user2!.id,
+        "message": "",
+        "localTime": "",
+        "image": "",
+        "type": "sendImage"
+      };
+      chatController.senImage(user1!.id!, user2!.id!, imagebase64);
+    
+      Usermessage usermessage = Usermessage(
+          image: imagebase64,
+          localTime: "",
+          message: "",
+          receiver: user2!.id,
+          sender: user1!.id);
+      listchart.add(usermessage);
+      imagebase64 = "";
+        
+      _channel.sink.add(jsonEncode(data));
+    } else {
       final data = {
         "sender": user1!.id,
         "receiver": user2!.id,
         "message": message,
         "localTime": "",
         "image": "",
+        "type": "sendMessage"
       };
-
       _channel.sink.add(jsonEncode(data));
-      sendController.clear();
-      userController.addannouceV2(user2!.id!, "Thông báo",
-          "Bạn vừa có tin nhắn từ ${user1!.fullName!}");
     }
 
-    if (imagebase64.isNotEmpty) {
-      chatController.senImage(user1!.id!, user2!.id!, imagebase64);
-      updateData(user2!.id!);
-    }
+
+    sendController.clear();
+    userController.addannouceV2(
+        user2!.id!, "Thông báo", "Bạn vừa có tin nhắn từ ${user1!.fullName!}");
 
     setState(() {
       haveImage = false;
@@ -310,7 +331,6 @@ class _HomeChatDetailState extends State<HomeChatDetail> {
                         width: AppDimention.screenWidth,
                         height: AppDimention.size100 * 3,
                         decoration: BoxDecoration(
-           
                             image: DecorationImage(
                                 fit: BoxFit.cover,
                                 image: MemoryImage(base64Decode(imagebase64)))),

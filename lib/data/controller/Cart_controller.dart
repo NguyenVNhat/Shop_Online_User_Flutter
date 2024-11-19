@@ -7,6 +7,7 @@ import 'package:flutter_user_github/models/Model/Item/StoresItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
 import 'package:flutter_user_github/models/Model/NewCartModel.dart';
 import 'package:flutter_user_github/models/Model/ZaloModels.dart';
+import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -97,7 +98,7 @@ class CartController extends GetxController implements GetxService {
 
   // * Hàm thanh toán đơn hàng
   Future<void> orderall(String address, String paymentMethod, double latitude,
-      double longitude) async {
+      double longitude,String discountCode) async{
     ordering = true;
     // * Thanh toán các đơn nằm được chọn
     if (!listcartinorder.isEmpty) {
@@ -107,13 +108,26 @@ class CartController extends GetxController implements GetxService {
           listIdCartItem.add(cart.cartId!);
         }
       }
-
-      Response response = await cartRepo.orderproductintcart(Cartdto(
+      Response response ;
+      if(discountCode != "")
+        {
+          response = await cartRepo.orderproductintcart(Cartdto(
+          cartlist: listIdCartItem,
+          deliveryAddress: address,
+          paymentMethod: paymentMethod,
+          latitude: latitude,
+          longitude: longitude,discountCode: discountCode));
+        }
+        else{
+          response = await cartRepo.orderproductintcart(Cartdto(
           cartlist: listIdCartItem,
           deliveryAddress: address,
           paymentMethod: paymentMethod,
           latitude: latitude,
           longitude: longitude));
+        }
+
+      
       if (response.statusCode == 200) {
         var data = response.body;
         if (paymentMethod == "CASH") {
@@ -129,9 +143,8 @@ class CartController extends GetxController implements GetxService {
             duration: Duration(seconds: 1),
             isDismissible: true,
           );
-          Get.find<UserController>().addannouce(
-              "Thông báo đơn hàng", "Bạn vừa đặt thành công một đơn hàng !");
           await getListCartV2();
+          
         } else if (paymentMethod == "MOMO") {
           _qrcode = (MomoModels.fromJson(data).momo);
           print("PAYURRL ${_qrcode.payUrl}");
@@ -140,7 +153,7 @@ class CartController extends GetxController implements GetxService {
         }
       } else {
         print("Đặt đơn hàng sản phẩm thất bại : " +
-            response.statusCode.toString());
+            response.body.toString());
       }
     } else {
       Get.snackbar(

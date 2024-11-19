@@ -34,6 +34,7 @@ class Usermessage {
   int? sender;
   int? receiver;
   String? localTime;
+  String? type;
 
   Usermessage({this.message, this.image, this.sender, this.receiver, this.localTime});
 
@@ -43,6 +44,7 @@ class Usermessage {
     sender = json['sender'];
     receiver = json['receiver'];
     localTime = json['local_time'];
+    type = json['type'];
   }
 
   Map<String, dynamic> toJson() {
@@ -52,6 +54,7 @@ class Usermessage {
     data['sender'] = this.sender;
     data['receiver'] = this.receiver;
     data['local_time'] = this.localTime;
+    data['type'] = this.type;
     return data;
   }
 }

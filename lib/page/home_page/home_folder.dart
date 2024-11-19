@@ -232,13 +232,11 @@ class _HomeFolderState extends State<HomeFolder> {
                                                   decoration: BoxDecoration(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            AppDimention
+                                                            AppDimention 
                                                                 .size10),
                                                     image: DecorationImage(
                                                       fit: BoxFit.cover,
-                                                      image: MemoryImage(
-                                                          base64Decode(
-                                                              item.image!)),
+                                                      image:item.image != null ?  MemoryImage(base64Decode(item.image!)) : AssetImage("assets/image/LoadingBg.png"),
                                                     ),
                                                   ),
                                                 ),

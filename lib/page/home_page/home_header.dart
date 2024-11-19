@@ -52,7 +52,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                 color: Colors.black45
               ),),
               Text("${Get.find<UserController>().userprofile!.fullName}",style: TextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w500
               ),),
             ],

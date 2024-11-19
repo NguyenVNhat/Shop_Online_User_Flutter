@@ -100,6 +100,7 @@ class UserController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
         return true;
     } else {
+      print(response.body);
       return false;
     }
     
@@ -119,6 +120,7 @@ class UserController extends GetxController implements GetxService {
        
       }
       else{
+        listannouce = [];
         print("Lỗi lấy thông báo ${response.statusCode}");
       }
       loadingannouce = false;

@@ -171,7 +171,8 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                   top: AppDimention.size100 * 2,
                   child: Container(
                       width: AppDimention.screenWidth,
-                      height: 600,
+                 
+                      
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
@@ -318,7 +319,7 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                     width: AppDimention.screenWidth,
                                     height: AppDimention.size60,
                                     decoration: BoxDecoration(
-                                        color: Colors.black12,
+                                      
                                         border: Border(
                                             bottom: BorderSide(
                                                 width: 1,
@@ -343,7 +344,9 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                                       left:
                                                           AppDimention.size10),
                                                   decoration: BoxDecoration(
-                                                      color: Colors.white),
+                                                      color: Colors.white,
+                                                      borderRadius: BorderRadius.circular(AppDimention.size5),
+                                                      image: DecorationImage(image: promotionController.checkVoucher(item.code!) ? AssetImage("assets/image/Voucher0.png") :AssetImage("assets/image/Voucher2.png") ,fit: BoxFit.cover)),
                                                   child: Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
@@ -352,23 +355,26 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                                       Row(
                                                         children: [
                                                           Text(
-                                                              "${item.discountPercentage!.toInt()}%"),
+                                                              "${item.discountPercent!.toInt()}%"),
                                                           SizedBox(
                                                             width: AppDimention
                                                                 .size10,
                                                           ),
-                                                          Text("${item.name}")
+                                                          Text("${item.code}")
                                                         ],
                                                       ),
-                                                      promotionController.checkPromotion(item.name!) ?
+                                                      if(promotionController.checkVoucher(item.code!))
+                                                        GestureDetector(
+                                                          onTap: () {
+                                                            promotionController.savepromotion(item.voucherId!);
+                                                          },
+                                                          child: Text("Lưu"),
+                                                        ),
+                                                      if(!promotionController.checkVoucher(item.code!))
                                                       GestureDetector(
-                                                        onTap: () {},
-                                                        child: Text("Lưu"),
-                                                      ):
-                                                      GestureDetector(
-                                                        onTap: () {},
-                                                        child: Text("Sở hữu"),
-                                                      )
+                                                          onTap: () {},
+                                                          child: Text("Đã có"),
+                                                        )
 
                                                     ],
                                                   ),

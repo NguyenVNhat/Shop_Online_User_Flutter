@@ -38,7 +38,7 @@ class _HomeProductRecommendState extends State<HomeProductRecommend> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : Column(
+          : productController.getlistProductRecommend.length ==0 ? Center(child: Text("Hiện chưa có sản phẩm gợi ý cho bạn"),)  :  Column(
               children: [
                 Row(
                   children: [
@@ -84,7 +84,7 @@ class _HomeProductRecommendState extends State<HomeProductRecommend> {
                               decoration: BoxDecoration(
                                 image: DecorationImage(
                                   fit: BoxFit.cover,
-                                  image: MemoryImage(base64Decode(item.image!)),
+                                  image:item.image != null ?  MemoryImage(base64Decode(item.image!)) : AssetImage("assets/image/LoadingBg.png"),
                                 ),
                               ),
                             ),

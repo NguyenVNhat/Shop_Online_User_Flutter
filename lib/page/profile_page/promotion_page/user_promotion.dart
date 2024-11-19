@@ -6,6 +6,7 @@ import 'package:flutter_user_github/route/app_route.dart';
 import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class UserPromotion extends StatefulWidget {
   const UserPromotion({
@@ -22,7 +23,12 @@ class _UserPromotionState extends State<UserPromotion> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    
+    promotionController.getbyUser();
+  }
+
+  String formatTime(String isoDateTime) {
+    DateTime dateTime = DateTime.parse(isoDateTime);
+    return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 
   @override
@@ -42,13 +48,18 @@ class _UserPromotionState extends State<UserPromotion> {
                   child: Text("Dành cho bạn"),
                 ),
                 GetBuilder<PromotionController>(builder: (controller) {
-                  return controller.getloadPromotionOfUser
+                  return controller.loadingByUser!
                       ? Center(
                           child: CircularProgressIndicator(),
                         )
-                      : Column(
-                          children: controller.getlistuserpromotion.map((item) {
-                            Storesitem? storesitem = storecontroller.getStoreById(item.storeId!);
+                      :controller.listpromotion.length == 0 ? Container(
+            width: Get.width,
+            height: 100,
+            child: Center(
+              child: Text("Hiện không có mã giảm giá"),
+            ),
+          ) : Column(
+                          children: controller.listpromotionByUser.map((item) {
                             return Container(
                               width: AppDimention.screenWidth,
                               padding: EdgeInsets.all(AppDimention.size10),
@@ -62,42 +73,64 @@ class _UserPromotionState extends State<UserPromotion> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Mã code : ${item.promotionCode}"),
-                                  Text("Giá trị : ${item.percent!.toInt()} %"),
+                                  Text(
+                                    "Mã code : ${item.code}",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  Text(
+                                    "Giá trị : ${item.discountPercent!.toInt()} %",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "${formatTime(item.startDate!)}",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      Text(
+                                        "${formatTime(item.endDate!)}",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
                                   Container(
                                     width: AppDimention.screenWidth,
-                                    
-                                    margin: EdgeInsets.only(top: AppDimention.size10),
-                                    padding: EdgeInsets.all(AppDimention.size10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(AppDimention.size5)
-                                    ),
+                                    margin: EdgeInsets.only(
+                                        top: AppDimention.size10),
+                                    padding:
+                                        EdgeInsets.all(AppDimention.size10),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                          Text("${storesitem!.storeName!}"),
-                                          Text("Địa chỉ : ${storesitem.location!}"),
-                                          GestureDetector(
-                                            onTap: (){
-                                              Get.toNamed(AppRoute.get_store_detail(storesitem.storeId!));
-                                            },
-                                            child: Center(
-                                              child: Container(
-                                                width: AppDimention.size100,
-                                                height: AppDimention.size40,
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(width: 1,color: Colors.green),
-                                                  borderRadius: BorderRadius.circular(AppDimention.size5)
-                                                ),
-                                                child: Center(
-                                                  child: Text("Chi tiết"),
-                                                ),
-                                              ),
-
+                                      children: item.storeId!.map((item) {
+                                        Storesitem? storeitem =
+                                            storecontroller.getStoreById(item);
+                                        return GestureDetector(
+                                          onTap: () {
+                                            Get.toNamed(AppRoute.get_store_detail(storeitem.storeId!));
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        AppDimention.size5)),
+                                            width: AppDimention.screenWidth,
+                                            padding: EdgeInsets.all(
+                                                AppDimention.size10),
+                                            margin: EdgeInsets.only(
+                                                bottom: AppDimention.size10),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("${storeitem!.storeName}",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500),),
+                                                Text("${storeitem.location}"),
+                                              ],
                                             ),
-                                          )
-                                      ],
+                                          ),
+                                        );
+                                      }).toList(),
                                     ),
                                   )
                                 ],

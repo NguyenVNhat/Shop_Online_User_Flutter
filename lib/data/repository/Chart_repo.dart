@@ -1,12 +1,16 @@
 import 'package:flutter_user_github/data/api/ApiClient.dart';
+import 'package:flutter_user_github/data/api/ApiClientAI.dart';
 import 'package:flutter_user_github/data/api/AppConstant.dart';
 import 'package:flutter_user_github/models/Dto/ChartDto.dart';
+import 'package:flutter_user_github/models/Dto/ChatAutoDto.dart';
 import 'package:get/get.dart';
 
 class ChartRepo {
   final ApiClient apiClient;
+  final Apiclientai apiclientai;
   ChartRepo({
     required this.apiClient,
+    required this.apiclientai,
   });
   Future<Response> getChart() async {
     return await apiClient.getData(Appconstant.CHART_URL);
@@ -19,8 +23,11 @@ class ChartRepo {
     return await apiClient.postData(Appconstant.SAVE_CHART_IMAGE,chartdto.toJson());
   }
     Future<Response> searchUser(String username) async {
-      print(username);
     
     return await apiClient.getData(Appconstant.CHART_SEARCH_URL.replaceFirst("{keyname}", username));
+  }
+  Future<Response> autoResponse(String question, int storeId) async {
+    Chatautodto chatdto = Chatautodto(storeId: storeId, question: question);
+    return await apiclientai.postData(Appconstant.AUTO_RESPONSE_URL,chatdto.toJson());
   }
 }

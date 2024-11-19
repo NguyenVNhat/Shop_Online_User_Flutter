@@ -2,16 +2,22 @@ class Appconstant {
   static const  String APP_NAME = "NhatDepTrai";
   static const int APP_VERSION = 1;
 
-  static const String BASE_URL = "http://192.168.1.39:8080";
-  static const String BASE_AI_URL = "http://192.168.1.39:5000";
+  static const String IP = "10.10.26.114";
+  static const String IPAI = "10.10.27.64";
+  static const String PORT = "8080";
+
+  static const String BASE_URL = "http://${IP}:${PORT}";
+  static const String BASE_AI_URL = "http://${IPAI}:5000";
 
   static const String SEARCH_BYIMAGE_URL = "/predict";
+  static const String AUTO_RESPONSE_URL = "/intent-detection";
   static const String RECOMMEND_PRODUCT_URL = "/cross-sell/{userId}";
 
   static const String LOGIN_URL= "/api/v1/auth/login";
   static const String LOGOUT_URL= "/api/v1/auth/logout";
+  static const String CHANGEPASSWORD_URL= "/api/v1/user/auth/reset-password?oldPassword={oldPassword}&newPassword={newpassword}";
   static const String REGISTER_URL= "/api/v1/auth/register-user";
-  static const String REGISTER_SHIPPER_URL= "/api/v1/auth/shipper-registration";
+  static const String REGISTER_SHIPPER_URL= "/api/v1/auth/shipper-registration2";
   static const String SENDOTP_URL= "/api/v1/auth/send-otp?email={email}";
   static const String VERIFYOTP_URL= "/api/v1/auth/confirm-otp?email={email}&otp={otp}&newPassword={newpassword}";
 
@@ -62,16 +68,22 @@ class Appconstant {
   static const String SIZE_URL = "/api/v1/public/sizes/all";
   static const String SIZE_BY_ID_URL = "/api/v1/public/sizes/{id}";
 
-  static const String PROMOTION_URL = "/api/v1/public/promotions/all";
-  static const String USER_PROMOTION_URL = "/api/v1/user/promotion";
-  static const String PROMOTION_BYSTOREID_URL = "/api/v1/public/promotion/store/{id}";
-  static const String USER_PROMOTION_BYSTOREID_URL = "/api/v1/user/promotion/store/{storeId}";
+  // lấy tất cả voucher
+  static const String PROMOTION_URL = "/api/v1/public/voucher/all";
+  // lấy tất cả voucher của bản thân
+  static const String USER_PROMOTION_URL = "/api/v1/user/voucher/get";
+  // lấy tất cả voucher của cửa hàng
+  static const String PROMOTION_BYSTOREID_URL = "/api/v1/public/voucher/{storeId}";
+  // lưu mã giảm giá
+  static const String SAVE_PROMOTION_URL = "/api/v1/user/voucher/apply?voucherId={voucherId}";
   
 
   static const String SAVE_CHART_IMAGE = "/api/chats/saveImages";
   static const String CHART_URL = "/api/chats/users-chat";
   static const String CHART_SEARCH_URL = "/api/v1/public/user/search/{keyname}";
   static const String GETLISTCHART_URL = "/api/chats/receiver/{receiverid}";
+
+  
 
   static const String TOKEN = "DBtoken";
 }

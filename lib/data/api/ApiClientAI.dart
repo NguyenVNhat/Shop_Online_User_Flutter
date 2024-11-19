@@ -36,7 +36,6 @@ class Apiclientai extends GetConnect implements GetxService {
   Future<Response> postData(String uri, dynamic body) async {
     try {
       Response response = await post(uri, body, headers: _mainHeaders);
-       print(response);
       return response;
     } catch (e) {
       return Response(statusCode: 1, statusText: e.toString());
@@ -45,7 +44,6 @@ class Apiclientai extends GetConnect implements GetxService {
   Future<Response> postDataPublic(String uri, dynamic body) async {
     try {
       Response response = await post(uri, body);
-       print(response);
       return response;
     } catch (e) {
       return Response(statusCode: 1, statusText: e.toString());
@@ -55,7 +53,6 @@ class Apiclientai extends GetConnect implements GetxService {
   Future<Response> putData(String uri, dynamic body) async {
     try {
       Response response = await put(uri, body, headers: _mainHeaders);
-      print(response);
       return response;
     } catch (e) {
       return Response(statusCode: 1, statusText: e.toString());

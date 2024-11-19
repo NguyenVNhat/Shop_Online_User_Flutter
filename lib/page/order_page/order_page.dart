@@ -382,9 +382,8 @@ class _OrderPageState extends State<OrderPage> {
           OrderHeader(),
           Obx(() {
             if (!authController!.IsLogin.value) {
-              return Container(
-                width: AppDimention.screenWidth,
-                height: AppDimention.screenHeight - AppDimention.size120,
+              return Expanded(
+               
                 child: Center(
                     child: GestureDetector(
                   onTap: () {
@@ -718,7 +717,7 @@ class _OrderPageState extends State<OrderPage> {
                                                       Container(
                                                           width: AppDimention
                                                                   .size100 *
-                                                              3.4,
+                                                              3.3,
                                                           height: AppDimention
                                                               .size30,
                                                           child: Stack(
@@ -787,7 +786,7 @@ class _OrderPageState extends State<OrderPage> {
                                                       Container(
                                                           width: AppDimention
                                                                   .size100 *
-                                                              3.4,
+                                                              3.3,
                                                           height: AppDimention
                                                               .size30,
                                                           child: Stack(
@@ -883,7 +882,7 @@ class _OrderPageState extends State<OrderPage> {
                                                       Container(
                                                           width: AppDimention
                                                                   .size100 *
-                                                              3.4,
+                                                              3.3,
                                                           height: AppDimention
                                                               .size30,
                                                           child: Stack(
@@ -1005,7 +1004,7 @@ class _OrderPageState extends State<OrderPage> {
                                                       Container(
                                                           width: AppDimention
                                                                   .size100 *
-                                                              3.40,
+                                                              3.3,
                                                           height: AppDimention
                                                               .size30,
                                                           child: Stack(
@@ -1129,10 +1128,10 @@ class _OrderPageState extends State<OrderPage> {
                                                               Container(
                                                                 width:
                                                                     AppDimention
-                                                                        .size100,
+                                                                        .size80,
                                                                 height:
                                                                     AppDimention
-                                                                        .size40,
+                                                                        .size30,
                                                                 decoration: BoxDecoration(
                                                                     color: AppColor
                                                                         .mainColor,
@@ -1140,12 +1139,9 @@ class _OrderPageState extends State<OrderPage> {
                                                                         BorderRadius.circular(
                                                                             AppDimention.size5)),
                                                                 child: Center(
-                                                                  child: Text(
-                                                                    "Hủy đơn",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white),
-                                                                  ),
+                                                                  child: Icon(Icons.delete_forever_rounded,color: Colors.white,),
+                                                              
+                                                               
                                                                 ),
                                                               ),
                                                             ]),
@@ -1163,33 +1159,33 @@ class _OrderPageState extends State<OrderPage> {
                                                               .orderlist[index]
                                                               .status ==
                                                           "Đơn hàng đã hoàn thành")
-                                                    GestureDetector(
-                                                      onTap: () {},
-                                                      child: Container(
-                                                        width: AppDimention
-                                                            .size100,
-                                                        height:
-                                                            AppDimention.size30,
-                                                        decoration: BoxDecoration(
-                                                            border: Border.all(
-                                                                color: Colors
-                                                                    .black12,
-                                                                width: 1),
-                                                            color: Colors.white,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5)),
-                                                        child: Center(
-                                                          child: Text(
-                                                            "Mua lại",
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .black),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
+                                                    // GestureDetector(
+                                                    //   onTap: () {},
+                                                    //   child: Container(
+                                                    //     width: AppDimention
+                                                    //         .size100,
+                                                    //     height:
+                                                    //         AppDimention.size30,
+                                                    //     decoration: BoxDecoration(
+                                                    //         border: Border.all(
+                                                    //             color: Colors
+                                                    //                 .black12,
+                                                    //             width: 1),
+                                                    //         color: Colors.white,
+                                                    //         borderRadius:
+                                                    //             BorderRadius
+                                                    //                 .circular(
+                                                    //                     5)),
+                                                    //     child: Center(
+                                                    //       child: Text(
+                                                    //         "Mua lại",
+                                                    //         style: TextStyle(
+                                                    //             color: Colors
+                                                    //                 .black),
+                                                    //       ),
+                                                    //     ),
+                                                    //   ),
+                                                    // ),
                                                   if (orderController
                                                           .orderlist[index]
                                                           .status

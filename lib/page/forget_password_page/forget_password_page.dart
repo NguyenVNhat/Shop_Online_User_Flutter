@@ -73,9 +73,8 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
       String password = passwordcontroller.text;
       if (otp.isEmpty) {
         announce = "Vui lòng nhập mã otp";
-      }
-      else{
-         auth_controller.verifyotp(email,otp,password).then((status) {
+      } else {
+        auth_controller.verifyotp(email, otp, password).then((status) {
           if (status) {
             setState(() {
               announce = "Thay đổi mật khẩu thành công";
@@ -100,61 +99,26 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            // Background blue
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: AppDimention.size320,
-              child: ClipPath(
-                clipper: ClippathCustomer(
-                  svgPath:
-                      "M1.97342e-05 -24.75H391.904C391.904 -24.75 451.205 218.765 383.748 152.224C316.292 85.6825 6.41361e-05 470.483 1.97342e-05 152.224C-2.46677e-05 -166.036 1.97342e-05 -24.75 1.97342e-05 -24.75Z",
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColor.mainColor,
-                  ),
-                ),
-              ),
-            ),
-            // Background blue
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: -1,
-              height: AppDimention.size320,
-              child: ClipPath(
-                clipper: ClippathCustomer(
-                  svgPath:
-                      "M0 75.0047C197.38 292.88 367.66 -173.226 407 75.0047V320H0V75.0047Z",
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColor.mainColor,
-                  ),
-                ),
-              ),
-            ),
             // Form login
             Positioned(
-              left: AppDimention.size40,
-              top: AppDimention.size110,
-              width: AppDimention.size310,
-              height: AppDimention.size630,
+              left: 10,
+              right: 10,
+              bottom: 10,
+              top: 250,
               child: Container(
+                width: Get.width,
+                height: Get.height,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(width: 1, color: AppColor.mainColor),
-                ),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(width: 1, color: AppColor.mainColor),
+                    image: DecorationImage(
+                        image: AssetImage('assets/image/LoadingBg.png'),
+                        fit: BoxFit.cover)),
                 child: Column(
                   children: [
                     SizedBox(
-                      height: AppDimention.size170,
-                    ),
-                    SizedBox(
-                      height: AppDimention.size10,
+                      height: 50,
                     ),
                     _isvalidEmail
                         ? Column(
@@ -349,38 +313,36 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                       ))
                     else
                       Center(
-                        child: GestureDetector(
-                          onTap: (){
-                            _verifyotp();
-                          },
-                          child: Container(
-                            width: AppDimention.screenWidth / 2,
-                            height: AppDimention.screenHeight / 14,
-                            decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(100)),
-                                color: AppColor.mainColor),
-                            child:Center(
-                                child: Text(
-                                  "Xác nhận",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: AppDimention.size20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                          child: GestureDetector(
+                        onTap: () {
+                          _verifyotp();
+                        },
+                        child: Container(
+                          width: AppDimention.screenWidth / 2,
+                          height: AppDimention.screenHeight / 14,
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(100)),
+                              color: AppColor.mainColor),
+                          child: Center(
+                            child: Text(
+                              "Xác nhận",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: AppDimention.size20,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                        )
-                      ),
+                          ),
+                        ),
+                      )),
                     SizedBox(
                       height: AppDimention.size40,
                     ),
                     RichText(
                       text: TextSpan(
                           text: "Bạn chưa có tài khoản ?",
-                          style:
-                              TextStyle(color: Colors.grey[500], fontSize: 15),
+                          style: TextStyle(color: Colors.white, fontSize: 15),
                           children: [
                             TextSpan(
                               recognizer: TapGestureRecognizer()
@@ -402,20 +364,71 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Icon(
-                              Icons.facebook,
-                              color: AppColor.mainColor,
-                              size: AppDimention.size40,
+                            GestureDetector(
+                              onTap: () {
+                                Get.snackbar(
+                                  "Thông báo",
+                                  "Tính năng đang phát triển",
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.white,
+                                  colorText: Colors.black,
+                                  icon: Icon(Icons.card_giftcard_sharp,
+                                      color: const Color.fromARGB(255, 168, 175, 76)),
+                                  borderRadius: 10,
+                                  margin: EdgeInsets.all(10),
+                                  duration: Duration(milliseconds: 800),
+                                  isDismissible: true,
+                                );
+                              },
+                              child: Icon(
+                                Icons.facebook,
+                                color: Colors.blue,
+                                size: AppDimention.size40,
+                              ),
                             ),
-                            Icon(
-                              Icons.email,
-                              color: AppColor.mainColor,
-                              size: AppDimention.size40,
+                            GestureDetector(
+                              onTap: () {
+                                Get.snackbar(
+                                  "Thông báo",
+                                  "Tính năng đang phát triển",
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.white,
+                                  colorText: Colors.black,
+                                  icon: Icon(Icons.card_giftcard_sharp,
+                                      color: const Color.fromARGB(255, 168, 175, 76)),
+                                  borderRadius: 10,
+                                  margin: EdgeInsets.all(10),
+                                  duration: Duration(milliseconds: 800),
+                                  isDismissible: true,
+                                );
+                              },
+                              child: Icon(
+                                Icons.email,
+                                color: Colors.white,
+                                size: AppDimention.size40,
+                              ),
                             ),
-                            Icon(
-                              Icons.phone,
-                              color: AppColor.mainColor,
-                              size: AppDimention.size40,
+                            GestureDetector(
+                              onTap: () {
+                                Get.snackbar(
+                                  "Thông báo",
+                                  "Tính năng đang phát triển",
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.white,
+                                  colorText: Colors.black,
+                                  icon: Icon(Icons.card_giftcard_sharp,
+                                      color: const Color.fromARGB(255, 168, 175, 76)),
+                                  borderRadius: 10,
+                                  margin: EdgeInsets.all(10),
+                                  duration: Duration(milliseconds: 800),
+                                  isDismissible: true,
+                                );
+                              },
+                              child: Icon(
+                                Icons.phone,
+                                color: Colors.yellow,
+                                size: AppDimention.size40,
+                              ),
                             ),
                           ],
                         ),

@@ -193,11 +193,14 @@ class AppPages {
       page: () {
         var comboId = Get.parameters['comboid'];
         var drinkid = Get.parameters['drinkid'];
+        var quantity = Get.parameters['quantity'];
+        int quantityInt = int.tryParse(quantity ?? '1') ?? 1;
+
         int comboIdInt = int.tryParse(comboId ?? '0') ?? 0;
         List<int> drinkIds =
             drinkid?.split(',').map((id) => int.tryParse(id) ?? 0).toList() ??
                 [];
-        return PaymentCombo(idcombo: comboIdInt, iddrink: drinkIds);
+        return PaymentCombo(idcombo: comboIdInt, iddrink: drinkIds,quantity: quantityInt,);
       },
       transition: Transition.fadeIn,
     ),

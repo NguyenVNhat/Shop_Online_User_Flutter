@@ -18,6 +18,7 @@ import 'package:flutter_user_github/theme/app_dimention.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -32,6 +33,12 @@ class OrderDetailPage extends StatefulWidget {
 class _OrderDetailPageState extends State<OrderDetailPage> {
   ProductController productController = Get.find<ProductController>();
   Storecontroller storecontroller = Get.find<Storecontroller>();
+  LatLng daNangCoordinates = LatLng(16.0544, 108.2022);
+  MapController mapController = MapController();
+  FunctionMap mapfuntion = FunctionMap();
+  List<LatLng> routePoints = [];
+  bool? isShowRoute = false;
+  double zoomValue = 14;
   User? shipper;
   @override
   void initState() {
@@ -39,7 +46,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     Get.find<OrderController>().getorderbyOrdercode(widget.orderCode);
     _fetchShipper();
   }
-
   Future<void> _fetchShipper() async {
     final orderController = Get.find<OrderController>();
     while (orderController.isLoading) {
@@ -47,48 +53,47 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
     if (orderController.orderdetail!.shipperId != 0) {
       final userController = Get.find<UserController>();
-      shipper =
-          await userController.getbyid(orderController.orderdetail!.shipperId!);
+      shipper = await userController.getbyid(orderController.orderdetail!.shipperId!);
       setState(() {});
     }
   }
-  List<LatLng> routePoints = [];
-  bool? isShowRoute = false;
   Future<void> getRoute(LatLng startPoint, LatLng endPoint) async {
     final apiKey = '5b3ce3597851110001cf62482f6aa59251a040bca10bfec215ef276c';
-    final url =
-        'https://api.openrouteservice.org/v2/directions/driving-car?api_key=$apiKey&start=${startPoint.longitude},${startPoint.latitude}&end=${endPoint.longitude},${endPoint.latitude}';
-
+    final url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=$apiKey&start=${startPoint.longitude},${startPoint.latitude}&end=${endPoint.longitude},${endPoint.latitude}';
     final response = await http.get(Uri.parse(url));
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final List<dynamic> coordinates =
-          data['features'][0]['geometry']['coordinates'];
-
+      final List<dynamic> coordinates = data['features'][0]['geometry']['coordinates'];
       setState(() {
-        routePoints =
-            coordinates.map((point) => LatLng(point[1], point[0])).toList();
-        print("Lấy thành công");
+        routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
       });
     } else {
-      print("Failed to fetch route");
+      Get.snackbar(
+          "Thông báo",
+          "Lấy đường đi thất bại",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white,
+          colorText: Colors.black,
+          icon: Icon(Icons.card_giftcard_sharp, color: Colors.green),
+          borderRadius: 10,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+          isDismissible: true,
+        );
     }
   }
-
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
           (Match match) => '${match[1]}.',
         );
   }
-
-  FunctionMap mapfuntion = FunctionMap();
-  MapController mapController = MapController();
-  double zoomValue = 14;
-  LatLng daNangCoordinates = LatLng(16.0544, 108.2022);
-
-  void _showDialogRoad(User shipper ,double latitude,double longitude) {
+  String formatTime(String isoDateTime) {
+    DateTime dateTime = DateTime.parse(isoDateTime);
+    return DateFormat('yyyy/MM/dd').format(dateTime);
+  }
+  void _showDialogRoad(User shipper ,double latitude,double longitude ,Function getroute) {
+    bool showShipperRoad = false;
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -263,7 +268,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              getRoute(
+                              getroute(
                                   LatLng(shipper.latitude!, shipper.longitude!),
                                   LatLng(latitude, longitude));
                               isShowRoute = !isShowRoute!;
@@ -291,7 +296,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ));
         });
   }
-
   void _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(
       scheme: 'tel',
@@ -303,7 +307,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       throw 'Could not launch $phoneNumber';
     }
   }
-
   void _sendSMS(String phoneNumber) async {
     final Uri smsUri = Uri(
       scheme: 'sms',
@@ -315,7 +318,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       throw 'Could not send SMS to $phoneNumber';
     }
   }
-
   void _sendEmail(String email, String subject, String body) async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
@@ -332,7 +334,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       throw 'Could not send email to $email';
     }
   }
-
   void _showDialogContact(User shipper) {
     showDialog(
         context: context,
@@ -410,50 +411,60 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 children: [
                   Container(
                     width: AppDimention.screenWidth,
-                    height: AppDimention.size100,
-                    padding: EdgeInsets.only(top: AppDimention.size40),
+                    height: AppDimention.size70,
                     decoration: BoxDecoration(color: AppColor.mainColor),
                     child: Center(
                       child: Text("Chi tiết đơn hàng",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: AppDimention.size25,
-                          )),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: AppDimention.size25,
+                        )
+                      ),
                     ),
                   ),
                   Expanded(
-                      child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: AppDimention.screenWidth,
-                          margin: EdgeInsets.all(AppDimention.size10),
-                          padding: EdgeInsets.all(AppDimention.size10),
-                          decoration: BoxDecoration(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: AppDimention.screenWidth,
+                            margin: EdgeInsets.all(AppDimention.size10),
+                            padding: EdgeInsets.all(AppDimention.size10),
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius:
-                                  BorderRadius.circular(AppDimention.size10)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
+                              borderRadius:BorderRadius.circular(AppDimention.size10)
+                            ),
+                            child: 
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                      "Mã đơn hàng : ${orderController.orderdetail!.orderCode}"),
-                                  Text(
-                                      "Ngày đặt hàng : ${orderController.orderdetail!.createdAt}"),
-                                  Container(
-                                    width: AppDimention.screenWidth -
-                                        AppDimention.size40,
-                                    child: Text(
-                                        "Địa chỉ giao hàng : ${orderController.orderdetail!.deliveryAddress}"),
-                                  )
+                                  Row(
+                                    children: [
+                                      Icon(Icons.qr_code_2_outlined,size: 16,color: AppColor.mainColor,),
+                                      SizedBox(width: AppDimention.size10,),
+                                      Text("${orderController.orderdetail!.orderCode}",style: TextStyle(color: AppColor.mainColor,),),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.timelapse_rounded,size: 16,color: AppColor.mainColor,),
+                                      SizedBox(width: AppDimention.size10,),
+                                      Text("${formatTime (orderController.orderdetail!.createdAt!)}",style: TextStyle(color: AppColor.mainColor,),),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.money,size: 16,color: AppColor.mainColor,),
+                                      SizedBox(width: AppDimention.size10,),
+                                      Text("đ${_formatNumber(orderController.orderdetail!.totalAmount!.toInt())}",style: TextStyle(color: AppColor.mainColor,),),
+                                    ],
+                                  ),
+                                  Text("Địa chỉ giao hàng : ${ orderController.orderdetail!.deliveryAddress}",style: TextStyle(color: AppColor.mainColor,),),
+                                  Text("Trạng thái đơn hàng : ${orderController.orderdetail!.status}",style: TextStyle(color: Colors.blue,),)
+                                  
                                 ],
                               )
-                            ],
-                          ),
                         ),
                         if (orderController.orderdetail!.shipperId != 0)
                           shipper == null
@@ -471,39 +482,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                         borderRadius: BorderRadius.circular(
                                             AppDimention.size10),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            width: AppDimention.size150,
-                                            height: AppDimention.size100 * 1.8,
-                                            decoration: BoxDecoration(
-                                                color: AppColor.yellowColor,
-                                                // image: DecorationImage(
-                                                //   fit: BoxFit.cover,
-                                                //   image: shipper!.avatar == null ? AssetImage("assets/image/default_avatar.jpg") : MemoryImage(base64Decode(shipper!.avatar!))
-                                                // )
-                                                ),
-                                          ),
-                                          Container(
-                                            width: AppDimention.size100 * 2,
-                                            height: AppDimention.size100 * 1.8,
-                                            child: Column(
+                                      child: Column(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.start,
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
+                                                Text("Thông tin người giao hàng",style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700
+                                                ),),
                                                 Text("${shipper!.fullName!}"),
                                                 Text(
                                                     "Số điện thoại : ${shipper!.phoneNumber!}"),
                                                 Text("Email : ${shipper!.email!}"),
                                               ],
                                             ),
-                                          )
-                                        ],
-                                      ),
                                     ),
                                     Container(
                                       margin:
@@ -536,7 +530,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                           ),
                                           GestureDetector(
                                             onTap: () {
-                                              _showDialogRoad(shipper!,orderController.orderdetail!.latitude!,orderController.orderdetail!.longitude!);
+                                              _showDialogRoad(shipper!,orderController.orderdetail!.latitude!,orderController.orderdetail!.longitude!,getRoute);
                                             },
                                             child: Container(
                                               width: AppDimention.size100 * 1.8,
@@ -560,6 +554,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                     ),
                                   ],
                                 ),
+                        if(orderController.orderdetail!.shipperId == 0)
+                        Center(
+                                child: Text("Chưa có người giao hàng cho đơn hàng"),
+                              ),
                         Column(
                           children: orderController.orderdetail!.orderDetails!
                               .map((item) {
@@ -599,12 +597,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                           margin: EdgeInsets.only(
                                               bottom: AppDimention.size10),
                                           decoration: BoxDecoration(
-                                              color: Colors.grey[200],
+                                              color: Colors.amber.withOpacity(0.5),
                                               borderRadius:
                                                   BorderRadius.circular(
                                                       AppDimention.size5)),
                                           child: Column(
                                             children: [
+
                                               Row(
                                                 children: [
                                                   Container(
@@ -651,30 +650,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                                           ],
                                                         ),
                                                       ),
-                                                      Container(
-                                                        width: AppDimention
-                                                                .size100 *
-                                                            2.3,
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
-                                                          children: [
-                                                            GestureDetector(
-                                                              onTap: () {
-                                                                Get.toNamed(AppRoute
-                                                                    .get_product_detail(
-                                                                        productOrder!
-                                                                            .productId!));
-                                                              },
-                                                              child: Center(
-                                                                child: Text(
-                                                                    "Chi tiết"),
-                                                              ),
-                                                            )
-                                                          ],
-                                                        ),
-                                                      )
+                                                      
                                                     ],
                                                   )
                                                 ],
@@ -711,7 +687,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                                   AppDimention.size20),
                                               decoration: BoxDecoration(
                                                   color: Colors.amber
-                                                      .withOpacity(0.8),
+                                                      .withOpacity(0.5),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           AppDimention.size10)),
@@ -1050,7 +1026,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ],
               ),
             )
-          : CircularProgressIndicator();
+          : Scaffold(
+            body: Container(
+              width: AppDimention.screenWidth,
+              height: AppDimention.screenHeight,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
     });
   }
 }

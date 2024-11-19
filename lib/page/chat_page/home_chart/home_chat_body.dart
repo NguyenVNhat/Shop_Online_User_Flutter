@@ -73,16 +73,7 @@ class _HomeChatBodyState extends State<HomeChatBody> {
                                   ),
                                 ],
                               ),
-                              Container(
-                                width: AppDimention.size100 * 2.2,
-                                margin:
-                                    EdgeInsets.only(top: AppDimention.size10),
-                                child: Text(
-                                  "Hope you are my best best best best best best  ",
-                                  style: TextStyle(color: Colors.black54),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
+                              
                             ],
                           )
                         ],

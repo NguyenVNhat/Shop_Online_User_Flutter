@@ -23,12 +23,12 @@ class _HomeProductBestsellerState extends State<HomeProductBestseller> {
     super.initState();
   }
 
-    String _formatNumber(int number) {
-      return number.toString().replaceAllMapped(
-            RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-            (Match match) => '${match[1]}.',
-          );
-    }
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (Match match) => '${match[1]}.',
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +46,10 @@ class _HomeProductBestsellerState extends State<HomeProductBestseller> {
                     ),
                     Text(
                       "Sản phẩm bán chạy",
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.w600,color: Colors.black.withOpacity(0.7)),
+                      style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black.withOpacity(0.7)),
                     ),
                   ],
                 ),
@@ -81,7 +83,7 @@ class _HomeProductBestsellerState extends State<HomeProductBestseller> {
                               decoration: BoxDecoration(
                                 image: DecorationImage(
                                   fit: BoxFit.cover,
-                                  image: MemoryImage(base64Decode(item.image!)),
+                                  image:item.image != null ?  MemoryImage(base64Decode(item.image!)) : AssetImage("assets/image/LoadingBg.png"),
                                 ),
                               ),
                             ),
@@ -164,7 +166,10 @@ class _HomeProductBestsellerState extends State<HomeProductBestseller> {
                                       Icon(Icons.delivery_dining_sharp),
                                       Text(
                                         "Miễn phí vận chuyển",
-                                        style: TextStyle(fontSize: 10,color: Colors.black.withOpacity(0.7)),
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color:
+                                                Colors.black.withOpacity(0.7)),
                                         overflow: TextOverflow.ellipsis,
                                       )
                                     ],

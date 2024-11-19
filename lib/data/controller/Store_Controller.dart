@@ -102,7 +102,6 @@ class Storecontroller extends GetxController {
       commonStores.add(store);
     }
     loadingCommonStore = false;
-    update();
     return commonStores;
   }
 }

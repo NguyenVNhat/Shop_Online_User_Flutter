@@ -8,6 +8,7 @@ class Ordercombodto {
   String? deliveryAddress;
   double? latitude;
   double? longitude;
+  String? discountCode;
 
   Ordercombodto({
     this.paymentMethod,
@@ -17,6 +18,7 @@ class Ordercombodto {
     this.quantity,
     this.size,
     this.deliveryAddress,
+    this.discountCode,
     this.latitude,
     this.longitude,
   });
@@ -28,6 +30,7 @@ class Ordercombodto {
     data['drinkId'] = this.drinkIds;
     data['storeId'] = this.storeId;
     data['quantity'] = this.quantity;
+    data['discountCode'] = this.discountCode;
     data['size'] = this.size;
     data['deliveryAddress'] = this.deliveryAddress;
     data['latitude'] = this.latitude;

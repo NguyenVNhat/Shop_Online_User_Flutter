@@ -29,46 +29,47 @@ class Promotionmodel {
 }
 
 class PromotionData {
-  int? id;
-  String? name;
+  int? voucherId;
+  List<int>? storeId;
+  String? code;
+  double? discountPercent;
   String? description;
-  String? image;
-  double? discountPercentage;
   String? startDate;
   String? endDate;
-  List<int>? storeIds;
+  bool? used;
 
   PromotionData(
-      {this.id,
-      this.name,
+      {this.voucherId,
+      this.storeId,
+      this.code,
+      this.discountPercent,
       this.description,
-      this.image,
-      this.discountPercentage,
       this.startDate,
       this.endDate,
-      this.storeIds});
+      this.used
+      });
 
   PromotionData.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
+    voucherId = json['voucherId'];
+    storeId = json['storeId'].cast<int>();
+    code = json['code'];
+    discountPercent = json['discountPercent'];
     description = json['description'];
-    image = json['image'];
-    discountPercentage = json['discountPercentage'];
     startDate = json['startDate'];
     endDate = json['endDate'];
-    storeIds = json['storeIds'].cast<int>();
+    used = json['used'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
+    data['voucherId'] = this.voucherId;
+    data['storeId'] = this.storeId;
+    data['code'] = this.code;
+    data['discountPercent'] = this.discountPercent;
     data['description'] = this.description;
-    data['image'] = this.image;
-    data['discountPercentage'] = this.discountPercentage;
     data['startDate'] = this.startDate;
     data['endDate'] = this.endDate;
-    data['storeIds'] = this.storeIds;
+    data['used'] = this.used;
     return data;
   }
 }

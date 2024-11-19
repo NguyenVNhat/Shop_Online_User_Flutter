@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:flutter_user_github/caculator/function.dart';
 import 'package:flutter_user_github/data/controller/Cart_controller.dart';
 import 'package:flutter_user_github/data/controller/Product_controller.dart';
+import 'package:flutter_user_github/data/controller/Promotion_controller.dart';
 import 'package:flutter_user_github/data/controller/User_controller.dart';
 import 'package:flutter_user_github/models/Model/CartModel.dart';
 import 'package:flutter_user_github/models/Model/Item/ProductItem.dart';
 import 'package:flutter_user_github/models/Model/MomoModel.dart';
+import 'package:flutter_user_github/models/Model/PromotionModel.dart';
 import 'package:flutter_user_github/models/Model/UserModel.dart';
 import 'package:flutter_user_github/models/Model/ZaloModels.dart';
 import 'package:flutter_user_github/page/cart_page/cart_order/cart_order_header.dart';
@@ -17,6 +19,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -36,12 +39,32 @@ class _CartOrderState extends State<CartOrder> {
 
   CartController cartController = Get.find<CartController>();
   ProductController productController = Get.find<ProductController>();
+  PromotionController promotionController = Get.find<PromotionController>();
   List<int> listCategoryId = [];
+  String? selectedVoucherStr = "";
+  double percentSelected = 0;
+
+  String? selectedProvince;
+  List<String> provinces = [];
+  String? selectedDistrict;
+  List<String> districts = [];
+  FunctionMap functionMap = FunctionMap();
   
   @override
   void initState() {
     super.initState();
     cartController.getlistcartorder();
+    loadVoucher();
+    loadProvince();
+  }
+  void loadVoucher()async{
+    await promotionController.getbyUser();
+  }
+   void onChangedVoucher(double percentPromotion, String promotionCode) {
+    setState(() {
+      selectedVoucherStr = promotionCode;
+      percentSelected = percentPromotion;
+    });
   }
 
   double? latitude;
@@ -72,96 +95,45 @@ class _CartOrderState extends State<CartOrder> {
     return distanceInMeters;
   }
 
-  String? selectedProvince;
-  List<String> provinces = [
-    'Hà Nội',
-    'Hồ Chí Minh',
-    'Đà Nẵng',
-    'Hải Phòng',
-    'Cần Thơ',
-    'Nghệ An',
-    'Thanh Hóa',
-    'Đồng Nai',
-    'Bình Dương',
-    'Khánh Hòa',
-    'Thừa Thiên Huế',
-    'An Giang',
-    'Bà Rịa-Vũng Tàu',
-    'Bắc Ninh',
-    'Nam Định',
-    'Vĩnh Long',
-    'Bắc Giang',
-    'Hưng Yên',
-    'Hà Nam',
-    'Quảng Ninh',
-    'Đắk Lắk',
-    'Gia Lai',
-    'Ninh Bình',
-    ' Hà Tĩnh',
-    'Quảng Nam',
-    'Thái Bình',
-    'Kiên Giang',
-    'Sóc Trăng',
-    'Lâm Đồng',
-    'Tây Ninh',
-    'Bến Tre',
-    'Long An',
-    'Bình Thuận',
-    'Hòa Bình',
-    'Lạng Sơn',
-    'Yên Bái',
-    'Cao Bằng',
-    'Điện Biên',
-    'Lào Cai',
-    'Sơn La',
-    'Tuyên Quang',
-    'Thái Nguyên',
-    'Hà Giang',
-    'Quảng Trị',
-    'Kon Tum',
-    'Ninh Thuận',
-    'Bắc Kạn',
-    'Hà Tĩnh',
-    'Đắk Nông',
-    'Hải Dương',
-    'Hưng Yên',
-    'Phú Thọ',
-    'Vĩnh Phúc',
-    'Nam Định',
-    'Thái Bình',
-    'Bắc Giang',
-    'Đồng Tháp',
-    'Hậu Giang',
-    'Trà Vinh',
-    'Bạc Liêu',
-    'Cà Mau',
-  ];
+  void loadProvince() async {
+    provinces = await functionMap.listProvinces();
+    setState(() {});
+  }
 
-  void _getaddress() {
+  void loadDistrict() async {
+    while (selectedProvince == null) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    districts = await functionMap.listDistrict(selectedProvince!);
+    setState(() {});
+  }
+  
+  void _getaddress() async {
+    while (provinces.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
     User user = Get.find<UserController>().userprofile!;
-    setState(() {
-      String address = user.address!;
-      getCoordinatesFromAddress(address);
-      List<String> listaddress = address.split(",");
-
-
-      setState(() {
-        HomenumberController.text = listaddress[0];
-        StreetController.text = listaddress[1];
-        DistrictController.text = listaddress[2];
-        String provinceFromAddress = listaddress[3].trim().toLowerCase();
-
-        if (provinces
-            .map((p) => p.toLowerCase().trim())
-            .contains(provinceFromAddress)) {
-          setState(() {
-            selectedProvince = listaddress[3].trim();
-          });
-        } else {
-          print("Province not found in the list.");
-        }
-      });
-    });
+    List<String> listaddress = user.address!.split("|@##@|");
+    getCoordinatesFromAddress( listaddress[2] + ", " + listaddress[1] + ", " + listaddress[0]);
+    HomenumberController.text = listaddress[2];
+    for (String item in provinces) {
+      if (item.trim().toLowerCase() == listaddress[0].toLowerCase().trim()) {
+        selectedProvince = item;
+      }
+    }
+    loadDistrict();
+    while (districts.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    for (String item in districts) {
+      if (item.trim().toLowerCase() == listaddress[1].toLowerCase().trim()) {
+        selectedDistrict = item;
+      }
+    }
+  }
+   String formatTime(String isoDateTime) {
+    DateTime dateTime = DateTime.parse(isoDateTime);
+    return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 
   String? selectedPayment;
@@ -172,13 +144,6 @@ class _CartOrderState extends State<CartOrder> {
     });
   }
 
-  String? selectedVoucher;
-  List<String> paymentVoucher = ["1110NVV", "2010NGVN", "2011PHVN"];
-  void onChangedVoucher(String? value) {
-    setState(() {
-      selectedVoucher = value;
-    });
-  }
 
   bool? isload = false;
   String? announce = "";
@@ -186,26 +151,19 @@ class _CartOrderState extends State<CartOrder> {
     String paymentMethod = selectedPayment!;
     if (paymentMethod.isEmpty ||
         HomenumberController.text.isEmpty ||
-        StreetController.text.isEmpty ||
-        DistrictController.text.isEmpty ||
-        selectedProvince!.isEmpty) {
+        selectedDistrict == null ||
+        selectedProvince == null ) {
       setState(() {
         announce = "Vui lòng nhập đủ thông tin";
       });
     } else {
-      String address = HomenumberController.text +
-          " " +
-          StreetController.text +
-          ", " +
-          DistrictController.text +
-          ", " +
-          selectedProvince!;
+      String address = selectedProvince.toString() + ", " +  selectedDistrict.toString() +", " + HomenumberController.text;
       if (ischangePoint == true) {
         longitude = tappedPoint.longitude;
         latitude = tappedPoint.latitude;
       } 
-
-      cartController.orderall(address, paymentMethod, latitude!, longitude!);
+          
+      cartController.orderall(address, paymentMethod, latitude!, longitude!,selectedVoucherStr!);
       while (cartController.ordering!) {
         await Future.delayed(const Duration(microseconds: 100));
       }
@@ -229,6 +187,7 @@ class _CartOrderState extends State<CartOrder> {
           }
         }
       }
+      Get.toNamed(AppRoute.ORDER_PAGE);
     }
   }
 
@@ -240,10 +199,8 @@ class _CartOrderState extends State<CartOrder> {
   FunctionMap functionmap = FunctionMap();
   void _showDropdown() async {
     if (selectedProvince == null ||
-        selectedProvince!.isEmpty ||
-        HomenumberController.text.isEmpty ||
-        StreetController.text.isEmpty ||
-        DistrictController.text.isEmpty) {
+        selectedDistrict == null||
+        HomenumberController.text == "") {
       Point mypoint = await functionmap.getCurrentLocation() as Point;
       setState(() {
         tappedPoint = LatLng(mypoint.latitude!, mypoint.longtitude!);
@@ -252,14 +209,11 @@ class _CartOrderState extends State<CartOrder> {
         print(2);
       });
     } else {
+      User user = Get.find<UserController>().userprofile!;
+      List<String> listaddress = user.address!.split("|@##@|");
       Point addresspoint = await functionmap.getCoordinatesFromAddress(
-          HomenumberController.text +
-              " " +
-              StreetController.text +
-              ", " +
-              DistrictController.text +
-              ", " +
-              selectedProvince!) as Point;
+              selectedProvince.toString() + ", " + selectedDistrict.toString() + ", " + HomenumberController.text)
+          as Point;
 
       setState(() {
         tappedPoint = LatLng(addresspoint.latitude!, addresspoint.longtitude!);
@@ -783,181 +737,168 @@ class _CartOrderState extends State<CartOrder> {
                       SizedBox(
                         height: AppDimention.size10,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            width: AppDimention.screenWidth / 2.15,
-                            height: AppDimention.size50,
-                            padding: EdgeInsets.only(
-                              left: AppDimention.size10,
-                              right: AppDimention.size10,
+                      Container(
+                        width: AppDimention.screenWidth,
+                        height: AppDimention.size60,
+                        margin: EdgeInsets.only(
+                          left: AppDimention.size5,
+                          right: AppDimention.size5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: selectedProvince,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedProvince = newValue;
+                              selectedDistrict = null;
+                              loadDistrict();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: "Tỉnh",
+                            hintStyle:
+                                TextStyle(color: Colors.black26, fontSize: 13),
+                            prefixIcon: Icon(
+                              Icons.location_city,
+                              color: AppColor.yellowColor,
+                              size: AppDimention.size25,
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: AppDimention.size15),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size5),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
                             ),
-                            child: DropdownButtonFormField<String>(
-                              value: selectedProvince != null &&
-                                      provinces.contains(selectedProvince)
-                                  ? selectedProvince
-                                  : null,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedProvince = newValue;
-                                });
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Tỉnh ...",
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                  fontSize: 13,
-                                ),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: AppDimention.size15,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppDimention.size5),
-                                  borderSide: BorderSide(
-                                    width: 1.0,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                  borderSide: BorderSide(
-                                    width: 1.0,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size10),
-                                ),
-                              ),
-                              items: provinces.map<DropdownMenuItem<String>>(
-                                  (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                );
-                              }).toList(),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
                             ),
                           ),
-                          Container(
-                            width: AppDimention.screenWidth / 2.15,
-                            height: AppDimention.size50,
-                            padding: EdgeInsets.only(
-                                left: AppDimention.size10,
-                                right: AppDimention.size10),
-                            decoration: BoxDecoration(
-                                color: Colors.white, boxShadow: []),
-                            child: TextField(
-                              controller: DistrictController,
-                              decoration: InputDecoration(
-                                hintText: "Quận / huyện ...",
-                                hintStyle: TextStyle(
-                                    color: Colors.black26, fontSize: 13),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                    vertical: AppDimention.size15),
-                                focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                ),
+                          items: provinces
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: TextStyle(fontSize: 12),
                               ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        width: AppDimention.screenWidth,
+                        height: AppDimention.size60,
+                        margin: EdgeInsets.only(
+                          left: AppDimention.size5,
+                          right: AppDimention.size5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: selectedDistrict,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedDistrict = newValue;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: "Quận / huyện",
+                            hintStyle:
+                                TextStyle(color: Colors.black26, fontSize: 13),
+                            prefixIcon: Icon(
+                              Icons.location_city,
+                              color: AppColor.yellowColor,
+                              size: AppDimention.size25,
                             ),
-                          )
-                        ],
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: AppDimention.size15),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size5),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
+                              borderSide:
+                                  BorderSide(width: 1.0, color: Colors.white),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size10),
+                            ),
+                          ),
+                          items: districts
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
                       SizedBox(
                         height: AppDimention.size10,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.only(
-                                right: AppDimention.size10,
-                                left: AppDimention.size10),
-                            width: AppDimention.screenWidth / 3.8,
-                            decoration: BoxDecoration(
-                                color: Colors.white, boxShadow: []),
-                            child: TextField(
-                              controller: HomenumberController,
-                              decoration: InputDecoration(
-                                hintText: "Số nhà ...",
-                                hintStyle: TextStyle(
-                                    color: Colors.black26, fontSize: 13),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                    vertical: AppDimention.size15),
-                                focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                ),
-                              ),
+                      Container(
+                        margin: EdgeInsets.only(
+                            left: AppDimention.size5,
+                            right: AppDimention.size5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: TextField(
+                          controller: HomenumberController,
+                          decoration: InputDecoration(
+                            hintText: "Số nhà , đường ...",
+                            hintStyle:
+                                TextStyle(color: Colors.black26, fontSize: 13),
+                            prefixIcon: Icon(
+                              Icons.roundabout_left_outlined,
+                              color: AppColor.yellowColor,
+                              size: AppDimention.size25,
+                            ),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: AppDimention.size15),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size30),
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.white)),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppDimention.size30),
+                                borderSide: BorderSide(
+                                    width: 1.0, color: Colors.white)),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppDimention.size30),
                             ),
                           ),
-                          Container(
-                            padding: EdgeInsets.only(
-                                right: AppDimention.size10,
-                                left: AppDimention.size10),
-                            width: AppDimention.screenWidth / 1.5,
-                            decoration: BoxDecoration(color: Colors.white),
-                            child: TextField(
-                              controller: StreetController,
-                              decoration: InputDecoration(
-                                hintText: "Tên đường ...",
-                                hintStyle: TextStyle(
-                                    color: Colors.black26, fontSize: 13),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                    vertical: AppDimention.size15),
-                                focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppDimention.size30),
-                                    borderSide: BorderSide(
-                                        width: 1.0, color: Colors.white)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppDimention.size30),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -989,12 +930,13 @@ class _CartOrderState extends State<CartOrder> {
                     Text("Phương thức thanh toán"),
                   ],
                 ),
+                // Get payment select field
                 Container(
                   width: AppDimention.screenWidth,
-                  margin: EdgeInsets.all(AppDimention.size10),
-                  decoration: BoxDecoration(color: Colors.white),
+                  padding: EdgeInsets.all(AppDimention.size10),
+                  decoration: BoxDecoration(),
                   child: DropdownButtonFormField(
-                    dropdownColor: Colors.white,
+                    dropdownColor: Colors.amber.withOpacity(0.5),
                     hint: Text(
                       "Chọn phương thức thanh toán",
                       style: TextStyle(color: Colors.black26, fontSize: 12),
@@ -1003,24 +945,58 @@ class _CartOrderState extends State<CartOrder> {
                       return DropdownMenuItem(
                         value: item,
                         child: Container(
-                          width: AppDimention.size100 * 3.8,
+                          width: AppDimention.screenWidth,
                           margin: EdgeInsets.only(
                               top: AppDimention.size10,
                               bottom: AppDimention.size10),
                           padding: EdgeInsets.all(AppDimention.size10),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: Colors.grey[200],
+                            borderRadius:
+                                BorderRadius.circular(AppDimention.size5),
                           ),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: AppDimention.size100 * 3.8,
-                                child: Text(
-                                  item,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: Container(
+                              width: AppDimention.screenWidth,
+                              child: Row(
+                                children: [
+                                  if (item == "ZALOPAY")
+                                    Container(
+                                      width: AppDimention.size40,
+                                      height: AppDimention.size40,
+                                      decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                              image: AssetImage(
+                                                  "assets/image/zalopay.jpg"),
+                                              fit: BoxFit.cover)),
+                                    ),
+                                  if (item == "MOMO")
+                                    Container(
+                                      width: AppDimention.size40,
+                                      height: AppDimention.size40,
+                                      decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                              image: AssetImage(
+                                                  "assets/image/momo.png"),
+                                              fit: BoxFit.cover)),
+                                    ),
+                                  if (item == "CASH")
+                                    Container(
+                                      width: AppDimention.size40,
+                                      height: AppDimention.size40,
+                                      decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                              image: AssetImage(
+                                                  "assets/image/cash.png"),
+                                              fit: BoxFit.cover)),
+                                    ),
+                                  SizedBox(
+                                    width: AppDimention.size20,
+                                  ),
+                                  Text(
+                                    "Thanh toán bằng ${item}",
+                                  ),
+                                ],
+                              )),
                         ),
                       );
                     }).toList(),
@@ -1032,14 +1008,14 @@ class _CartOrderState extends State<CartOrder> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppDimention.size5),
                         borderSide: BorderSide(
-                          color: const Color.fromARGB(57, 158, 158, 158),
+                          color: Colors.grey,
                           width: 1.0,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppDimention.size5),
                         borderSide: BorderSide(
-                          color: const Color.fromARGB(57, 158, 158, 158),
+                          color: Colors.grey,
                           width: 1.0,
                         ),
                       ),
@@ -1054,7 +1030,6 @@ class _CartOrderState extends State<CartOrder> {
                     selectedItemBuilder: (BuildContext context) {
                       return paymentMethod.map((item) {
                         return Container(
-                          decoration: BoxDecoration(),
                           alignment: Alignment.centerLeft,
                           height: 60,
                           width: AppDimention.size100 * 3,
@@ -1064,6 +1039,151 @@ class _CartOrderState extends State<CartOrder> {
                     },
                   ),
                 ),
+                Row(
+                    children: [
+                      SizedBox(
+                        width: AppDimention.size10,
+                      ),
+                      Text("Mã giảm giá"),
+                    ],
+                  ),
+                  GetBuilder<PromotionController>(builder: (controller) {
+                    
+                    return controller.loadingByUser!? CircularProgressIndicator() : controller.getbystoreidanduser(cartController.listcartinorder[0].storeitem!.storeId!).length == 0
+                            ? Center(
+                                child: Text(
+                                  "Bạn không có mã giảm giá cho cửa hàng này",
+                                  style: TextStyle(color: Colors.black45),
+                                ),
+                              )
+                            : Container(
+                                width: AppDimention.screenWidth,
+                                padding: EdgeInsets.all(AppDimention.size10),
+                                decoration: BoxDecoration(),
+                                child: DropdownButtonFormField(
+                                  dropdownColor: Colors.amber.withOpacity(0.5),
+                                  hint: Text(
+                                    "Chọn mã giảm giá",
+                                    style: TextStyle(
+                                        color: Colors.black26, fontSize: 12),
+                                  ),
+                                  items: controller.getbyuser().map((item) {
+                                    return DropdownMenuItem(
+                                      value: item,
+                                      child: Container(
+                                        width: AppDimention.screenWidth,
+                                        padding:
+                                            EdgeInsets.all(AppDimention.size10),
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                                width: AppDimention.screenWidth,
+                                                margin: EdgeInsets.only(
+                                                    bottom:
+                                                        AppDimention.size10),
+                                                padding: EdgeInsets.all(
+                                                    AppDimention.size10),
+                                                decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                        fit: BoxFit.cover,
+                                                        image: AssetImage(
+                                                          "assets/image/Voucher0.png",
+                                                        )),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            AppDimention
+                                                                .size10)),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                        "Mã giảm giá : ${item.code}",
+                                                        style: TextStyle(
+                                                            fontSize: 12,
+                                                            color:
+                                                                Colors.white)),
+                                                    Text(
+                                                        "Giá trị : ${item.discountPercent}%",
+                                                        style: TextStyle(
+                                                            fontSize: 12,
+                                                            color:
+                                                                Colors.white)),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          "${formatTime(item.startDate!)}",
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                        Text(
+                                                          "${formatTime(item.endDate!)}",
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ))
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    var selectedVoucher =
+                                        value as PromotionData;
+                                    onChangedVoucher(
+                                        selectedVoucher.discountPercent!,
+                                        selectedVoucher.code!);
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppDimention.size5),
+                                      borderSide: BorderSide(
+                                        color: Colors.green,
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                  ),
+                                  selectedItemBuilder: (BuildContext context) {
+                                    return controller.listpromotion.map((item) {
+                                      return Container(
+                                        alignment: Alignment.centerLeft,
+                                        height: 60,
+                                        width: AppDimention.size100 * 3,
+                                        child: Text(item.code!,
+                                            style: TextStyle(fontSize: 16)),
+                                      );
+                                    }).toList();
+                                  },
+                                ),
+                              );
+                  }),
                 Row(
                   children: [
                     SizedBox(

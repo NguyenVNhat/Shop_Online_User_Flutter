@@ -7,6 +7,7 @@ class Orderproductdto {
   String? deliveryAddress;
   double? latitude;
   double? longitude;
+  String? discountCode;
 
   Orderproductdto(
       {this.paymentMethod,
@@ -15,6 +16,7 @@ class Orderproductdto {
       this.quantity,
       this.size,
       this.deliveryAddress,
+      this.discountCode,
       this.latitude,
       this.longitude});
 
@@ -22,7 +24,7 @@ class Orderproductdto {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['paymentMethod'] = this.paymentMethod;
     data['productId'] = this.productId;
-
+    data['discountCode'] = this.discountCode;
     data['storeId'] = this.storeId;
     data['quantity'] = this.quantity;
     data['size'] = this.size;
